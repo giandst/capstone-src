@@ -1,0 +1,3 @@
+{
+  "extends": "@capstone-src/config/tsconfig.base.json"
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@capstone-src/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@capstone-src/db": "workspace:*",
+    "@capstone-src/env": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@capstone-src/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
