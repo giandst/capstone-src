@@ -56,3 +56,10 @@ coverage
 .cache
 tmp
 temp
+
+# Agent tooling (skills and BMad install, not project work)
+.claude/
+_bmad/
+
+# Editor lock files (LibreOffice)
+.~lock.*#

@@ -1,0 +1,2038 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El Motor de Controles</title>
+<style>
+/* ============================================================
+   EXPEDIENTE — brainstorming session keepsake
+   Visual world: a Chilean compliance case file. Cold bond paper
+   on a folder ground, violet notary ink, oxide stamp red,
+   ledger green. Single committed theme, every color explicit.
+   ============================================================ */
+
+:root{
+  color-scheme: light;
+
+  --ground:      #C6C8C1;
+  --ground-deep: #B3B6AE;
+  --sheet:       #F2F1EC;
+  --sheet-2:     #E9E8E1;
+  --sheet-3:     #DEDDD5;
+  --bind:        #DCDBD3;
+
+  --ink:    #17181A;
+  --ink-2:  #52565A;
+  --ink-3:  #7E8286;
+  --ink-4:  #A6A9A6;
+  --rule:   #C3C5BE;
+  --rule-2: #D6D7D0;
+
+  --notary:      #42308A;
+  --notary-2:    #5B47AB;
+  --notary-soft: #E9E4F6;
+  --notary-line: #C6BCE6;
+
+  --oxide:      #9C2E1B;
+  --oxide-soft: #F5E4DF;
+  --oxide-line: #E0BCB2;
+
+  --ledger:      #285644;
+  --ledger-soft: #E1EBE5;
+  --ledger-line: #B6CDC1;
+
+  --amber:      #8A5B10;
+  --amber-soft: #F5EAD5;
+
+  --f-disp: "Helvetica Neue", Helvetica, "Liberation Sans", Arial, sans-serif;
+  --f-body: Georgia, "Liberation Serif", "Times New Roman", Times, serif;
+  --f-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas,
+            "DejaVu Sans Mono", "Liberation Mono", monospace;
+
+  --pad: clamp(1.1rem, 3.2vw, 2.6rem);
+}
+
+*{ box-sizing: border-box; }
+
+html{ -webkit-text-size-adjust: 100%; }
+
+body{
+  margin: 0;
+  background-color: var(--ground);
+  background-image:
+    repeating-linear-gradient(90deg, rgba(0,0,0,.020) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(0deg,  rgba(255,255,255,.16) 0 1px, transparent 1px 4px);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 17px;
+  line-height: 1.62;
+  overflow-x: hidden;
+}
+
+/* ---------- shell ---------- */
+
+.wrap{
+  max-width: 74rem;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 3rem) clamp(.6rem, 2.5vw, 2rem) 5rem;
+}
+
+.sheet{
+  position: relative;
+  background: var(--sheet);
+  border: 1px solid var(--ground-deep);
+  box-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 3px 14px rgba(20,22,20,.13);
+  margin: 0 0 clamp(1.1rem, 2.6vw, 2rem);
+  padding: var(--pad) var(--pad) calc(var(--pad) + .4rem) calc(var(--pad) + 2.4rem);
+}
+/* binding edge: the punched margin of a filed document */
+.sheet::before{
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2.2rem;
+  background: var(--bind);
+  border-right: 1px solid var(--rule-2);
+}
+.sheet::after{
+  content: "";
+  position: absolute;
+  left: .95rem; top: 3.2rem; bottom: 3.2rem;
+  width: 1px;
+  background: repeating-linear-gradient(180deg, var(--ink-4) 0 3px, transparent 3px 9px);
+  opacity: .55;
+}
+@media (max-width: 700px){
+  .sheet{ padding-left: calc(var(--pad) + 1rem); }
+  .sheet::before{ width: 1rem; }
+  .sheet::after{ left: .45rem; }
+}
+
+/* ---------- type roles ---------- */
+
+h1,h2,h3,h4{ font-family: var(--f-disp); text-wrap: balance; margin: 0; }
+
+.eyebrow{
+  font-family: var(--f-mono);
+  font-size: .68rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.mono{ font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+
+p{ margin: 0 0 .85em; max-width: 64ch; }
+.lede{ font-size: 1.06rem; }
+
+a{ color: var(--notary); }
+
+:focus-visible{ outline: 2px solid var(--notary); outline-offset: 2px; }
+
+/* ============================================================
+   COVER
+   ============================================================ */
+
+.cover{ padding-top: calc(var(--pad) + .6rem); }
+
+.docket{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .5rem 1.4rem;
+  padding-bottom: .8rem;
+  border-bottom: 3px double var(--ink);
+  font-family: var(--f-mono);
+  font-size: .72rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.docket b{ color: var(--ink); font-weight: 700; }
+
+h1{
+  font-size: clamp(2.1rem, 7.2vw, 4.15rem);
+  line-height: .96;
+  letter-spacing: -.025em;
+  font-weight: 800;
+  margin: 1.1rem 0 .1rem;
+  max-width: 15ch;
+}
+h1 em{
+  font-style: normal;
+  display: block;
+  color: var(--notary);
+}
+.sub{
+  font-family: var(--f-mono);
+  font-size: .78rem;
+  letter-spacing: .07em;
+  color: var(--ink-2);
+  max-width: 58ch;
+  margin: .9rem 0 0;
+  line-height: 1.65;
+}
+
+.stamp{
+  position: absolute;
+  right: clamp(.7rem, 3vw, 2.4rem);
+  top: clamp(4rem, 11vw, 6.5rem);
+  transform: rotate(-7deg);
+  border: 2.5px solid var(--oxide);
+  color: var(--oxide);
+  font-family: var(--f-disp);
+  font-weight: 800;
+  font-size: clamp(.62rem, 1.5vw, .8rem);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  padding: .38rem .7rem;
+  text-align: center;
+  line-height: 1.3;
+  opacity: .82;
+  pointer-events: none;
+}
+.stamp span{ display: block; font-size: .78em; letter-spacing: .1em; font-weight: 600; }
+@media (max-width: 620px){ .stamp{ position: static; transform: rotate(-2deg); display: inline-block; margin-top: 1.2rem; } }
+
+/* field grid on the cover */
+.fields{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0;
+  margin: 1.9rem 0 0;
+  border-top: 1px solid var(--rule);
+}
+.field{
+  border-bottom: 1px solid var(--rule);
+  border-right: 1px solid var(--rule);
+  padding: .7rem .9rem .8rem 0;
+}
+.field:last-child{ border-right: 0; }
+.field dt{
+  font-family: var(--f-mono);
+  font-size: .63rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: .25rem;
+}
+.field dd{ margin: 0; font-size: .93rem; line-height: 1.45; }
+
+/* stat strip */
+.stats{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  margin-top: 1.6rem;
+}
+.stat{ background: var(--sheet); padding: .8rem .5rem .7rem; text-align: center; }
+.stat b{
+  display: block;
+  font-family: var(--f-disp);
+  font-weight: 800;
+  font-size: clamp(1.5rem, 5.4vw, 2.5rem);
+  line-height: 1;
+  letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
+}
+.stat span{
+  display: block;
+  font-family: var(--f-mono);
+  font-size: .6rem;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-top: .4rem;
+}
+
+/* ---------- attribution ---------- */
+
+.attrib{ margin-top: 1.7rem; }
+.attrib-bar{
+  display: flex;
+  height: 2.6rem;
+  border: 1px solid var(--ink);
+  overflow: hidden;
+}
+.attrib-bar > i{
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  align-items: center;
+  justify-content: center;
+  font-style: normal;
+  font-family: var(--f-mono);
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  border-right: 1px solid var(--ink);
+}
+.attrib-bar > i:last-child{ border-right: 0; }
+.seg-u{ flex: 48; background: var(--notary); color: #fff; }
+.seg-c{ flex: 64; background: var(--notary-soft); color: var(--notary); }
+.seg-n{ flex: 13; background: var(--sheet-3); color: var(--ink-2); }
+.attrib-key{
+  display: flex; flex-wrap: wrap; gap: .35rem 1.5rem;
+  margin-top: .55rem;
+  font-family: var(--f-mono); font-size: .68rem; color: var(--ink-2);
+}
+.attrib-key b{ color: var(--ink); }
+
+/* ---------- how to read (legend) ---------- */
+
+.legend{ background: var(--sheet-2); }
+.legend h2{
+  font-size: .78rem; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--ink-2); margin-bottom: .9rem;
+}
+.legend-grid{
+  display: grid; gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+}
+
+/* ============================================================
+   ENTRY SYSTEM — student primary, coach as marginalia
+   ============================================================ */
+
+.reel{ list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem; }
+
+.e{
+  display: grid;
+  grid-template-columns: 6.6rem 1fr;
+  gap: 0 1rem;
+  align-items: start;
+}
+.e > .tag{
+  font-family: var(--f-mono);
+  font-size: .61rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  padding-top: .38rem;
+  text-align: right;
+  white-space: nowrap;
+}
+.e > .txt{ min-width: 0; }
+
+/* student — the record itself */
+.e-u > .tag{ color: var(--notary); font-weight: 700; }
+.e-u > .txt{
+  font-family: var(--f-body);
+  font-size: 1.02rem;
+  line-height: 1.5;
+  color: var(--ink);
+  border-left: 3px solid var(--notary);
+  background: #FBFAF7;
+  padding: .3rem .8rem .35rem .85rem;
+}
+/* coach — annotation in the margin of the record */
+.e-c > .tag{ color: var(--ink-3); }
+.e-c > .txt{
+  font-family: var(--f-disp);
+  font-size: .855rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+  border-left: 1px dashed var(--rule);
+  padding: .18rem .8rem .2rem .85rem;
+}
+/* unattributed — the log's own bookkeeping */
+.e-n > .tag{ color: var(--ink-4); }
+.e-n > .txt{
+  font-family: var(--f-mono);
+  font-size: .76rem;
+  color: var(--ink-3);
+  border-left: 1px solid var(--rule-2);
+  padding: .2rem .8rem .2rem .85rem;
+}
+.e strong{ color: var(--ink); }
+.e-c strong{ color: var(--ink); font-weight: 700; }
+
+/* dimming mode */
+body.focus-student .e-c > .txt,
+body.focus-student .e-n > .txt{ opacity: .3; }
+body.focus-student .e-c > .tag,
+body.focus-student .e-n > .tag{ opacity: .3; }
+.e > .txt, .e > .tag{ transition: opacity .18s ease; }
+
+@media (max-width: 660px){
+  .e{ grid-template-columns: 1fr; gap: .12rem; }
+  .e > .tag{ text-align: left; padding-top: 0; }
+}
+
+/* ============================================================
+   TECHNIQUE HEADERS
+   ============================================================ */
+
+.tech{ scroll-margin-top: 1rem; }
+
+.tech-head{
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: .2rem 1.1rem;
+  align-items: end;
+  padding-bottom: .7rem;
+  margin-bottom: 1.3rem;
+  border-bottom: 2px solid var(--ink);
+}
+.tech-num{
+  grid-row: span 2;
+  font-family: var(--f-disp);
+  font-weight: 800;
+  font-size: clamp(2.4rem, 8vw, 3.6rem);
+  line-height: .8;
+  letter-spacing: -.05em;
+  color: var(--notary);
+  font-variant-numeric: tabular-nums;
+}
+.tech-head h2{
+  font-size: clamp(1.25rem, 4.2vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: -.015em;
+  line-height: 1.05;
+}
+.tech-head .tech-meta{
+  font-family: var(--f-mono);
+  font-size: .655rem;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.batch-rule{
+  display: flex; align-items: center; gap: .8rem;
+  margin: 2.2rem 0 1.1rem;
+  font-family: var(--f-mono); font-size: .66rem;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--ink-2);
+}
+.batch-rule::before, .batch-rule::after{
+  content: ""; flex: 1; height: 0; border-top: 1px solid var(--ground-deep);
+}
+
+h3.mini{
+  font-size: .715rem;
+  letter-spacing: .19em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin: 1.9rem 0 .8rem;
+  padding-bottom: .3rem;
+  border-bottom: 1px solid var(--rule);
+}
+h3.mini em{ font-style: normal; color: var(--notary); }
+
+.note{
+  font-family: var(--f-mono);
+  font-size: .7rem;
+  line-height: 1.6;
+  color: var(--ink-3);
+  max-width: 70ch;
+  margin: .6rem 0 0;
+}
+.note b{ color: var(--ink-2); }
+
+.scroll-x{ overflow-x: auto; overscroll-behavior-x: contain; padding-bottom: .4rem; }
+
+/* ============================================================
+   FIGURE 1 — three-layer engine
+   ============================================================ */
+
+.engine{ display: grid; gap: 0; margin: 1rem 0 0; border: 1.5px solid var(--ink); }
+.layer{ display: grid; grid-template-columns: 9.5rem 1fr; border-bottom: 1px solid var(--ink); }
+.layer:last-child{ border-bottom: 0; }
+.layer-name{
+  background: var(--ink);
+  color: var(--sheet);
+  padding: .8rem .9rem;
+  font-family: var(--f-disp);
+  font-weight: 800;
+  font-size: .8rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  display: flex; flex-direction: column; justify-content: center; gap: .3rem;
+}
+.layer-name small{
+  font-weight: 400; font-family: var(--f-mono); font-size: .6rem;
+  letter-spacing: .05em; text-transform: none; color: var(--ink-4);
+}
+.layer-body{ padding: .8rem .9rem; background: var(--sheet); }
+.layer:nth-child(2) .layer-body{ background: var(--sheet-2); }
+.layer:nth-child(3) .layer-body{ background: var(--notary-soft); }
+.chips{ display: flex; flex-wrap: wrap; gap: .35rem; }
+.chip{
+  font-family: var(--f-mono); font-size: .7rem;
+  border: 1px solid var(--rule); background: var(--sheet);
+  padding: .2rem .5rem; border-radius: 1px; color: var(--ink-2);
+}
+.chip.hot{ border-color: var(--notary); color: var(--notary); background: #fff; font-weight: 700; }
+.chip.ext{ border-style: dashed; color: var(--ink-3); }
+.ctrl-box{
+  border: 1px solid var(--notary-line); background: #fff;
+  padding: .55rem .7rem; margin-bottom: .5rem;
+}
+.ctrl-box:last-child{ margin-bottom: 0; }
+.ctrl-box b{
+  font-family: var(--f-disp); font-size: .78rem; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--notary); display: block; margin-bottom: .35rem;
+}
+.arrow-down{
+  text-align: center; font-family: var(--f-mono); font-size: .68rem;
+  color: var(--ink-3); letter-spacing: .2em; padding: .25rem 0;
+  background: var(--sheet-3); border-bottom: 1px solid var(--ink);
+}
+@media (max-width: 640px){
+  .layer{ grid-template-columns: 1fr; }
+  .layer-name{ flex-direction: row; align-items: baseline; gap: .6rem; padding: .5rem .7rem; }
+}
+
+/* ============================================================
+   FIGURE 2 — scoring breakdown (the receipt)
+   ============================================================ */
+
+.score{
+  border: 1.5px solid var(--ink);
+  background: #FBFAF7;
+  max-width: 46rem;
+  margin-top: 1rem;
+}
+.score-head{
+  display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+  padding: .6rem .85rem; border-bottom: 1px solid var(--ink);
+  background: var(--sheet-2);
+  font-family: var(--f-mono); font-size: .66rem;
+  letter-spacing: .13em; text-transform: uppercase; color: var(--ink-2);
+}
+.srow{
+  display: grid;
+  grid-template-columns: 1fr 8.5rem 3.4rem;
+  gap: .5rem .8rem;
+  align-items: center;
+  padding: .5rem .85rem;
+  border-bottom: 1px dotted var(--rule);
+  font-size: .88rem;
+}
+.srow .sname small{
+  display: block; font-family: var(--f-mono); font-size: .62rem;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3);
+}
+.smeter{ height: .62rem; background: var(--sheet-3); border: 1px solid var(--rule); }
+.smeter i{ display: block; height: 100%; background: var(--notary); }
+.smeter.rel i{ background: var(--notary); }
+.smeter.intr i{ background: var(--amber); }
+.sval{ font-family: var(--f-mono); font-size: .84rem; text-align: right; font-variant-numeric: tabular-nums; }
+.stotal{
+  display: grid; grid-template-columns: 1fr 8.5rem 3.4rem; gap: .5rem .8rem;
+  align-items: center; padding: .7rem .85rem;
+  background: var(--ink); color: var(--sheet);
+  font-family: var(--f-disp); font-weight: 800;
+  font-size: .82rem; letter-spacing: .12em; text-transform: uppercase;
+}
+.stotal .sval{ color: #fff; font-size: 1.1rem; }
+.bands{ display: flex; gap: 1px; background: var(--rule); border-top: 1px solid var(--ink); }
+.band{
+  flex: 1; padding: .45rem .5rem; background: var(--sheet-2); text-align: center;
+  font-family: var(--f-mono); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.band.on{ background: var(--oxide); color: #fff; font-weight: 700; }
+@media (max-width: 560px){
+  .srow, .stotal{ grid-template-columns: 1fr 3.4rem; }
+  .srow .smeter, .stotal .smeter{ grid-column: 1 / -1; }
+}
+
+/* ============================================================
+   FIGURE 3 — señal families
+   ============================================================ */
+
+.two{ display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); margin-top: 1rem; }
+.fam{ border: 1px solid var(--ink); background: var(--sheet); }
+.fam > h4{
+  padding: .5rem .8rem; border-bottom: 1px solid var(--ink);
+  font-size: .74rem; letter-spacing: .15em; text-transform: uppercase; font-weight: 800;
+}
+.fam.rel > h4{ background: var(--notary); color: #fff; }
+.fam.intr > h4{ background: var(--amber-soft); color: var(--amber); }
+.fam ul{ margin: 0; padding: .7rem .9rem .7rem 2rem; font-size: .9rem; }
+.fam li{ margin-bottom: .3rem; }
+.fam .foot{
+  border-top: 1px dotted var(--rule); padding: .5rem .8rem;
+  font-family: var(--f-mono); font-size: .65rem; line-height: 1.55; color: var(--ink-3);
+}
+
+/* ============================================================
+   FIGURE 4 — question wall
+   ============================================================ */
+
+.qwall{ display: grid; gap: .1rem; margin-top: 1rem; }
+.q{
+  display: grid; grid-template-columns: 3.6rem 1fr; gap: .9rem;
+  padding: .55rem 0; border-bottom: 1px solid var(--rule-2); align-items: start;
+}
+.q > .qid{
+  font-family: var(--f-mono); font-size: .68rem; color: var(--ink-4);
+  padding-top: .28rem; font-variant-numeric: tabular-nums;
+}
+.q-u > .qid{ color: var(--notary); font-weight: 700; }
+.q > .qt{ font-size: 1.02rem; line-height: 1.42; }
+.q-u > .qt{ color: var(--ink); }
+.q-c > .qt{ color: var(--ink-2); font-family: var(--f-disp); font-size: .9rem; }
+.q .answered{
+  display: inline-block; margin-left: .4rem; vertical-align: .1em;
+  font-family: var(--f-mono); font-size: .58rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ledger);
+  border: 1px solid var(--ledger-line); background: var(--ledger-soft);
+  padding: .08rem .34rem;
+}
+
+/* ============================================================
+   FIGURE 5 — two sensors
+   ============================================================ */
+
+.sensors{ margin-top: 1rem; }
+.trace-bar{ display: flex; border: 1.5px solid var(--ink); }
+.trace-bar > div{
+  padding: .6rem .8rem; font-family: var(--f-mono); font-size: .68rem;
+  letter-spacing: .1em; text-transform: uppercase;
+}
+.trace-yes{ flex: 62; background: var(--notary-soft); color: var(--notary); border-right: 1.5px solid var(--ink); }
+.trace-no{ flex: 38; background: repeating-linear-gradient(45deg, var(--sheet-3) 0 6px, var(--sheet-2) 6px 12px); color: var(--ink-2); }
+.sensor-pair{ display: grid; grid-template-columns: 62fr 38fr; gap: 0; }
+.sensor{ padding: .75rem .85rem; border: 1.5px solid var(--ink); border-top: 0; }
+.sensor h4{ font-size: .76rem; letter-spacing: .13em; text-transform: uppercase; margin-bottom: .35rem; }
+.sensor.data h4{ color: var(--notary); }
+.sensor.people{ border-left: 0; }
+.sensor.people h4{ color: var(--oxide); }
+.sensor p{ font-size: .85rem; margin: 0; font-family: var(--f-disp); color: var(--ink-2); line-height: 1.5; }
+@media (max-width: 620px){
+  .trace-bar{ flex-direction: column; }
+  .trace-yes{ border-right: 0; border-bottom: 1.5px solid var(--ink); }
+  .sensor-pair{ grid-template-columns: 1fr; }
+  .sensor.people{ border-left: 1.5px solid var(--ink); }
+}
+
+/* fears -> requirements */
+.f2r{ display: grid; gap: .45rem; margin-top: 1rem; }
+.f2r-row{
+  display: grid; grid-template-columns: 1fr 2.2rem 1.6fr; align-items: center; gap: .6rem;
+  border: 1px solid var(--rule); background: var(--sheet); padding: .5rem .7rem;
+}
+.f2r-row .fear{ font-size: .96rem; font-style: italic; }
+.f2r-row .to{ text-align: center; color: var(--notary); font-family: var(--f-mono); font-size: .95rem; }
+.f2r-row .req{ font-family: var(--f-disp); font-size: .84rem; color: var(--ink-2); line-height: 1.45; }
+@media (max-width: 640px){
+  .f2r-row{ grid-template-columns: 1fr; gap: .2rem; }
+  .f2r-row .to{ text-align: left; }
+}
+
+/* ============================================================
+   FIGURE 6 — assumption flips
+   ============================================================ */
+
+.flips{ display: grid; gap: .9rem; margin-top: 1rem; }
+.flip{ border: 1.5px solid var(--ink); background: var(--sheet); }
+.flip .assume{
+  padding: .55rem .85rem;
+  background: var(--sheet-3);
+  border-bottom: 1.5px solid var(--ink);
+  font-family: var(--f-mono); font-size: .78rem; color: var(--ink-3);
+  text-decoration: line-through;
+  text-decoration-color: var(--oxide);
+  text-decoration-thickness: 2px;
+}
+.flip .assume span{ text-decoration: none; display: block; font-size: .6rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-4); margin-bottom: .2rem; }
+.flip .becomes{ padding: .75rem .85rem; }
+.flip .becomes h4{
+  font-size: .9rem; letter-spacing: -.01em; margin-bottom: .3rem; color: var(--notary);
+}
+.flip .becomes p{ margin: 0; font-size: .93rem; }
+.flip .becomes p + p{ margin-top: .45rem; }
+
+.fatigue{
+  margin-top: 1.1rem;
+  border-left: 3px solid var(--amber);
+  background: var(--amber-soft);
+  padding: .6rem .9rem;
+  font-family: var(--f-mono); font-size: .72rem; line-height: 1.6; color: var(--amber);
+}
+.fatigue b{ letter-spacing: .12em; text-transform: uppercase; font-size: .64rem; display: block; margin-bottom: .2rem; }
+
+/* ============================================================
+   FIGURE 7 — one feature only (redaction)
+   ============================================================ */
+
+.elim{ display: grid; gap: .35rem; margin-top: 1rem; }
+.redact{
+  display: grid; grid-template-columns: 1fr auto; gap: .8rem; align-items: center;
+  width: 100%; text-align: left;
+  font: inherit; font-family: var(--f-mono); font-size: .8rem;
+  background: var(--ink); color: var(--ink);
+  border: 1px solid var(--ink); cursor: pointer;
+  padding: .42rem .7rem;
+  transition: background .18s ease, color .18s ease;
+}
+.redact .rlabel{ letter-spacing: .04em; }
+.redact .rmark{
+  font-size: .6rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink);
+}
+.redact[aria-expanded="true"]{ background: var(--sheet-2); color: var(--ink-2); }
+.redact[aria-expanded="true"] .rmark{ color: var(--oxide); }
+.redact:hover{ background: #2A2C2F; }
+.redact[aria-expanded="true"]:hover{ background: var(--sheet-3); }
+
+.survivor{
+  margin-top: 1.1rem;
+  border: 2.5px solid var(--notary);
+  background: #fff;
+  padding: 1rem 1.1rem;
+}
+.survivor .kicker{
+  font-family: var(--f-mono); font-size: .62rem; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--notary);
+}
+.survivor h4{
+  font-size: clamp(1.35rem, 5vw, 2.1rem); font-weight: 800; letter-spacing: -.025em;
+  margin: .2rem 0 .5rem; color: var(--ink);
+}
+.absorbed{ list-style: none; margin: .8rem 0 0; padding: 0; display: grid; gap: .28rem; }
+.absorbed li{
+  display: grid; grid-template-columns: 1.6rem 1fr; gap: .5rem;
+  font-family: var(--f-disp); font-size: .85rem; color: var(--ink-2);
+  border-top: 1px dotted var(--notary-line); padding-top: .28rem;
+}
+.absorbed li::before{ content: "\21B3"; color: var(--notary); font-family: var(--f-mono); }
+
+/* ============================================================
+   FIGURE 8 — morphological grid
+   ============================================================ */
+
+table.morph{
+  border-collapse: collapse;
+  font-family: var(--f-mono);
+  font-size: .72rem;
+  min-width: 44rem;
+  margin-top: 1rem;
+}
+table.morph th, table.morph td{
+  border: 1px solid var(--rule);
+  padding: .5rem .6rem;
+  vertical-align: top;
+  text-align: left;
+}
+table.morph th[scope="row"]{
+  background: var(--sheet-2);
+  color: var(--ink);
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  font-size: .64rem;
+  white-space: nowrap;
+  width: 11rem;
+}
+table.morph td{ background: var(--sheet); color: var(--ink-3); width: 15%; }
+table.morph td.hit{ background: var(--notary-soft); color: var(--notary); font-weight: 700; }
+table.morph td.gap{
+  background: repeating-linear-gradient(45deg, #fff 0 5px, var(--oxide-soft) 5px 10px);
+  color: var(--oxide);
+}
+table.morph td .cellmark{
+  display: block; font-size: .55rem; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--ink-4); margin-top: .25rem;
+}
+table.morph td.hit .cellmark{ color: var(--notary-2); }
+table.morph td.gap .cellmark{ color: var(--oxide); }
+table.morph td.void{ background: var(--sheet-3); }
+.gridkey{ display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; margin-top: .6rem; font-family: var(--f-mono); font-size: .64rem; color: var(--ink-3); }
+.gridkey i{ display: inline-block; width: .8rem; height: .8rem; border: 1px solid var(--rule); vertical-align: -.05rem; margin-right: .35rem; }
+.gridkey .k-hit{ background: var(--notary-soft); border-color: var(--notary-line); }
+.gridkey .k-gap{ background: repeating-linear-gradient(45deg, #fff 0 4px, var(--oxide-soft) 4px 8px); border-color: var(--oxide-line); }
+.gridkey .k-void{ background: var(--sheet-3); }
+
+.pick{
+  margin-top: 1rem; border: 1px solid var(--ledger-line); background: var(--ledger-soft);
+  padding: .7rem .9rem;
+}
+.pick b{
+  font-family: var(--f-mono); font-size: .62rem; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--ledger); display: block; margin-bottom: .25rem;
+}
+.pick p{ margin: 0; font-size: .93rem; }
+
+/* ============================================================
+   FIGURE 9 — backcasting ladder
+   ============================================================ */
+
+.ladder{ margin-top: 1rem; position: relative; padding-left: 2.6rem; }
+.ladder::before{
+  content: ""; position: absolute; left: .78rem; top: .6rem; bottom: 1.6rem;
+  width: 2px; background: var(--ink);
+}
+.ladder::after{
+  content: "\25B2"; position: absolute; left: .18rem; top: -.35rem;
+  font-size: .8rem; color: var(--ink);
+}
+.rung{ position: relative; margin-bottom: .75rem; }
+.rung::before{
+  content: ""; position: absolute; left: -1.94rem; top: .62rem;
+  width: .72rem; height: .72rem; background: var(--sheet); border: 2px solid var(--ink);
+  border-radius: 50%;
+}
+.rung.t0::before{ background: var(--oxide); border-color: var(--oxide); }
+.rung.t0 .rbody{ border-color: var(--oxide); }
+.rung .rwhen{
+  font-family: var(--f-mono); font-size: .6rem; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--ink-3); margin-bottom: .15rem;
+}
+.rung.t0 .rwhen{ color: var(--oxide); font-weight: 700; }
+.rung .rbody{
+  border-left: 3px solid var(--rule); padding: .1rem 0 .1rem .8rem;
+}
+.rung h4{ font-size: .98rem; font-weight: 700; letter-spacing: -.01em; margin-bottom: .18rem; }
+.rung p{ margin: 0; font-size: .89rem; color: var(--ink-2); font-family: var(--f-disp); line-height: 1.5; }
+.rung.by-u .rbody{ border-left-color: var(--notary); }
+.backlabel{
+  position: absolute; left: -.3rem; bottom: -.2rem;
+  font-family: var(--f-mono); font-size: .58rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink-3);
+  writing-mode: vertical-rl; transform: rotate(180deg);
+}
+
+/* derivation chain */
+.chain{ display: flex; align-items: stretch; gap: 0; min-width: 40rem; margin-top: .9rem; }
+.link{
+  flex: 1; border: 1px solid var(--ink); border-right: 0; background: var(--sheet);
+  padding: .55rem .6rem; position: relative;
+}
+.link:last-child{ border-right: 1px solid var(--ink); background: var(--notary-soft); }
+.link:first-child{ background: var(--sheet-3); }
+.link b{
+  display: block; font-family: var(--f-mono); font-size: .58rem; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--ink-3); margin-bottom: .2rem;
+}
+.link span{ font-size: .82rem; font-family: var(--f-disp); color: var(--ink); line-height: 1.35; display: block; }
+.link:last-child span{ color: var(--notary); font-weight: 700; }
+
+/* ============================================================
+   FIGURE 10 — failure modes
+   ============================================================ */
+
+.fails{ display: grid; gap: .5rem; margin-top: 1rem; }
+.fail{
+  display: grid; grid-template-columns: 2.4rem 1fr; gap: .8rem;
+  border: 1px solid var(--rule); border-left: 3px solid var(--ink-3);
+  background: var(--sheet); padding: .6rem .8rem;
+}
+.fail .fnum{ font-family: var(--f-mono); font-size: .68rem; color: var(--ink-4); padding-top: .12rem; }
+.fail h4{ font-size: .92rem; font-weight: 700; margin-bottom: .15rem; }
+.fail p{ margin: 0; font-size: .85rem; color: var(--ink-2); font-family: var(--f-disp); line-height: 1.5; }
+.fail.owned{ border-left-color: var(--notary); background: #FBFAF7; }
+.fail.owned .fnum{ color: var(--notary); font-weight: 700; }
+.fail.sharp{ border: 2px solid var(--oxide); border-left-width: 5px; background: var(--oxide-soft); }
+.fail.sharp h4{ color: var(--oxide); }
+.fail.sharp .fnum{ color: var(--oxide); font-weight: 700; }
+.fail .ftag{
+  display: inline-block; font-family: var(--f-mono); font-size: .56rem;
+  letter-spacing: .14em; text-transform: uppercase; margin-left: .45rem;
+  vertical-align: .12em; padding: .06rem .32rem; border: 1px solid currentColor;
+}
+
+/* ============================================================
+   CONVERGENCE — clusters + MoSCoW cut line
+   ============================================================ */
+
+.clusters{ display: grid; gap: 1px; background: var(--rule);
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  border: 1px solid var(--rule); margin-top: 1rem; }
+.cl{ background: var(--sheet); padding: .5rem .65rem; }
+.cl b{ font-family: var(--f-disp); font-weight: 800; color: var(--notary); font-size: .9rem; }
+.cl span{ display: block; font-family: var(--f-mono); font-size: .68rem; color: var(--ink-2); margin-top: .1rem; line-height: 1.4; }
+
+.moscow{ margin-top: 1.4rem; }
+.mgroup{ border: 1.5px solid var(--ink); margin-bottom: .55rem; background: var(--sheet); }
+.mgroup > header{
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .8rem;
+  padding: .45rem .8rem; border-bottom: 1px solid var(--ink);
+  font-family: var(--f-disp); font-weight: 800;
+  font-size: .8rem; letter-spacing: .16em; text-transform: uppercase;
+}
+.mgroup > header small{
+  font-family: var(--f-mono); font-weight: 400; font-size: .62rem;
+  letter-spacing: .08em; text-transform: none; color: var(--ink-3);
+}
+.m-must > header{ background: var(--notary); color: #fff; }
+.m-must > header small{ color: var(--notary-line); }
+.m-should > header{ background: var(--notary-soft); color: var(--notary); }
+.m-could > header{ background: var(--sheet-2); color: var(--ink-2); }
+.m-wont{ border-color: var(--ink-4); background: var(--sheet-2); position: relative; }
+.m-wont > header{ background: var(--sheet-3); color: var(--ink-2); border-bottom-color: var(--ink-4); }
+.mitems{ list-style: none; margin: 0; padding: .6rem .8rem; display: grid; gap: .3rem; }
+.mitems li{
+  display: grid; grid-template-columns: 2.1rem 1fr; gap: .6rem;
+  font-size: .92rem; line-height: 1.45;
+}
+.mitems li i{
+  font-style: normal; font-family: var(--f-mono); font-size: .7rem;
+  color: var(--notary); font-weight: 700; padding-top: .2rem;
+}
+.m-wont .mitems li{ color: var(--ink-2); font-size: .88rem; }
+.m-wont .mitems li i{ color: var(--ink-4); }
+.mitems li em{ font-style: normal; font-family: var(--f-mono); font-size: .68rem; color: var(--ink-3); display: block; }
+
+.cutline{
+  display: flex; align-items: center; gap: .8rem;
+  margin: 1.3rem 0 1rem;
+  font-family: var(--f-disp); font-weight: 800; font-size: .72rem;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--oxide);
+}
+.cutline::before, .cutline::after{
+  content: ""; flex: 1; height: 0;
+  border-top: 2px dashed var(--oxide);
+}
+.cut-note{ text-align: center; font-family: var(--f-mono); font-size: .66rem; color: var(--ink-3); margin: -.6rem 0 1rem; }
+
+.promo{
+  display: grid; grid-template-columns: auto 1fr; gap: .8rem; align-items: start;
+  border: 1.5px solid var(--ledger); background: var(--ledger-soft);
+  padding: .7rem .9rem; margin: 1.1rem 0 0;
+}
+.promo .pmark{ font-family: var(--f-mono); font-size: 1.1rem; color: var(--ledger); line-height: 1.1; }
+.promo h4{ font-size: .88rem; color: var(--ledger); letter-spacing: .04em; margin-bottom: .2rem; }
+.promo p{ margin: 0 0 .4rem; font-size: .89rem; }
+.promo p:last-child{ margin-bottom: 0; }
+.promo .split{
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem,1fr)); gap: .5rem; margin-top: .55rem;
+}
+.promo .split div{ background: #fff; border: 1px solid var(--ledger-line); padding: .45rem .6rem; font-size: .84rem; font-family: var(--f-disp); }
+.promo .split b{ font-family: var(--f-mono); font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ledger); display: block; }
+
+.stamp-inline{
+  display: inline-block; transform: rotate(-3deg);
+  border: 2px solid var(--oxide); color: var(--oxide);
+  font-family: var(--f-disp); font-weight: 800; font-size: .64rem;
+  letter-spacing: .16em; text-transform: uppercase; padding: .22rem .5rem;
+  opacity: .85; margin-left: .4rem;
+}
+
+/* ============================================================
+   SYNTHESIS — the one inverted sheet, the climax
+   ============================================================ */
+
+.synth{
+  background: #191727;
+  border-color: #0E0D16;
+  color: #E7E4F2;
+  box-shadow: 0 3px 22px rgba(15,13,25,.4);
+}
+.synth::before{ background: #23203A; border-right-color: #322D4E; }
+.synth::after{ background: repeating-linear-gradient(180deg, #4E4770 0 3px, transparent 3px 9px); opacity: .8; }
+.synth .eyebrow{ color: #9A92C4; }
+.synth h2{
+  font-size: clamp(1.6rem, 6vw, 2.6rem); font-weight: 800; letter-spacing: -.025em;
+  margin: .3rem 0 .5rem; color: #fff;
+}
+.synth > p{ color: #BDB7D6; max-width: 62ch; }
+.synth .tech-head{ border-bottom-color: #4E4770; }
+
+.syn{ display: grid; gap: .9rem; margin-top: 1.6rem; }
+.syn-item{
+  border: 1px solid #3A3557;
+  background: #201D33;
+  padding: .9rem 1rem 1rem;
+}
+.syn-item.wild{ border-color: var(--oxide); background: #291B22; }
+.syn-n{
+  font-family: var(--f-mono); font-size: .62rem; letter-spacing: .18em;
+  text-transform: uppercase; color: #8F86BE;
+}
+.syn-item.wild .syn-n{ color: #E0876E; }
+.bridge{
+  display: grid; grid-template-columns: 1fr auto 1fr; gap: .5rem; align-items: stretch;
+  margin: .6rem 0 .75rem;
+}
+.bnode{
+  border: 1px solid #4A4470; background: #17152A; padding: .45rem .6rem;
+  font-family: var(--f-mono); font-size: .72rem; color: #D6D1EC; line-height: 1.45;
+}
+.bnode b{
+  display: block; font-size: .56rem; letter-spacing: .15em; text-transform: uppercase;
+  color: #8F86BE; margin-bottom: .2rem; font-weight: 400;
+}
+.bjoin{
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--f-mono); font-size: 1rem; color: #7E74B4;
+}
+.syn-item.wild .bnode{ border-color: #6E3A2C; background: #23141A; }
+.syn-item.wild .bjoin{ color: #C8735A; }
+.syn-out{ font-size: 1.02rem; line-height: 1.5; color: #F1EEFA; margin: 0; max-width: 68ch; }
+.syn-out b{ color: #C9BEFF; font-weight: 400; box-shadow: inset 0 -1px 0 #6E62AC; }
+.syn-item.wild .syn-out b{ color: #F0A88E; box-shadow: inset 0 -1px 0 #A8543C; }
+.syn-tail{
+  margin: .55rem 0 0; font-family: var(--f-mono); font-size: .68rem;
+  line-height: 1.6; color: #9A92C4;
+}
+.bridge.b3{ grid-template-columns: 1fr auto 1fr auto 1fr; }
+@media (max-width: 860px){
+  .bridge.b3{ grid-template-columns: 1fr; }
+  .bridge.b3 .bjoin{ justify-content: flex-start; transform: rotate(90deg); width: 1rem; }
+}
+@media (max-width: 620px){
+  .bridge{ grid-template-columns: 1fr; }
+  .bjoin{ justify-content: flex-start; transform: rotate(90deg); width: 1rem; }
+}
+
+/* ============================================================
+   REGISTER — per-technique bars
+   ============================================================ */
+
+.reg{ display: grid; gap: .34rem; margin-top: 1rem; }
+.regrow{ display: grid; grid-template-columns: 12.5rem 1fr 3.6rem; gap: .7rem; align-items: center; }
+.regrow > .rname{ font-family: var(--f-mono); font-size: .68rem; letter-spacing: .06em; color: var(--ink-2); }
+.regrow > .rcount{ font-family: var(--f-mono); font-size: .68rem; color: var(--ink-3); text-align: right; font-variant-numeric: tabular-nums; }
+.rbar{ display: flex; height: 1.15rem; background: var(--sheet-2); border: 1px solid var(--rule-2); }
+.rbar > i{ display: block; height: 100%; }
+.rbar .bu{ background: var(--notary); }
+.rbar .bc{ background: repeating-linear-gradient(45deg, var(--notary-line) 0 3px, var(--notary-soft) 3px 6px); }
+.rbar .bn{ background: var(--sheet-3); }
+@media (max-width: 620px){
+  .regrow{ grid-template-columns: 1fr 3.4rem; }
+  .regrow > .rname{ grid-column: 1 / -1; }
+}
+
+/* ============================================================
+   COLOPHON
+   ============================================================ */
+
+.colophon{
+  margin-top: 1.6rem;
+  font-family: var(--f-mono); font-size: .68rem; line-height: 1.7; color: var(--ink-3);
+  display: flex; flex-wrap: wrap; gap: .3rem 1.6rem;
+  border-top: 3px double var(--ink-4); padding-top: .8rem;
+}
+.closing{
+  border-left: 3px solid var(--notary);
+  padding: .2rem 0 .2rem 1rem;
+  font-size: 1.08rem;
+  max-width: 58ch;
+}
+
+/* toggle */
+.toolbar{
+  display: flex; flex-wrap: wrap; gap: .6rem; align-items: center;
+  margin-top: 1.4rem;
+}
+.tgl{
+  font: inherit; font-family: var(--f-mono); font-size: .68rem;
+  letter-spacing: .1em; text-transform: uppercase;
+  background: var(--sheet); color: var(--ink-2);
+  border: 1px solid var(--ink-3); padding: .35rem .7rem; cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.tgl:hover{ border-color: var(--notary); color: var(--notary); }
+.tgl[aria-pressed="true"]{ background: var(--notary); border-color: var(--notary); color: #fff; }
+
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{ transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ==================== COVER ==================== -->
+<section class="sheet cover">
+  <div class="docket">
+    <span>Expediente <b>MPD&#8239;/&#8239;2026-08-29</b></span>
+    <span>Session log <b>.memlog.md</b></span>
+    <span>Mode <b>Creative Partner</b></span>
+    <span>Closed <b>2026-09-02&#8239;21:34</b></span>
+  </div>
+
+  <div class="stamp">Case closed<span>Converged &#183; 1 pass</span></div>
+
+  <h1>El motor <em>de controles</em></h1>
+  <p class="sub">A brainstorming session for the APT capstone &mdash; Ingenier&iacute;a en Inform&aacute;tica, Duoc UC.
+  Subject: a platform supporting the <b>Modelo de Prevenci&oacute;n del Delito</b>. Seven techniques,
+  two batches, one convergence. What follows is the whole file: what was said, who said it,
+  and what the session turned out to be for.</p>
+
+  <dl class="fields">
+    <div class="field">
+      <dt>Topic</dt>
+      <dd>Plataforma de apoyo al Modelo de Prevenci&oacute;n del Delito (MPD)</dd>
+    </div>
+    <div class="field">
+      <dt>Goal on file</dt>
+      <dd>Find a semester-sized prototype scope by generating far more candidate features, modules,
+      alert rules and framings than will be built &mdash; so that cutting down is a real choice.</dd>
+    </div>
+    <div class="field">
+      <dt>Source of truth</dt>
+      <dd>APT proposal saved verbatim at <span class="mono">inputs/apt-project-idea.md</span> (Spanish).
+      Docs, code and commits in English; domain terms stay in Spanish.</dd>
+    </div>
+    <div class="field">
+      <dt>Outcome</dt>
+      <dd>MoSCoW ratified, cut line pre-committed, five non-obvious connections recovered from
+      across the session.</dd>
+    </div>
+  </dl>
+
+  <div class="stats">
+    <div class="stat"><b>125</b><span>entries</span></div>
+    <div class="stat"><b>7</b><span>techniques</span></div>
+    <div class="stat"><b>2</b><span>batches</span></div>
+    <div class="stat"><b>1</b><span>convergence</span></div>
+  </div>
+
+  <div class="attrib">
+    <div class="attrib-bar" role="img" aria-label="Attribution split: 48 entries by the student, 64 by the coach, 13 unattributed bookkeeping entries.">
+      <i class="seg-u">48 student</i>
+      <i class="seg-c">64 coach</i>
+      <i class="seg-n">13</i>
+    </div>
+    <div class="attrib-key">
+      <span><b>48</b> tagged <span class="mono">by user</span> &mdash; the student's own ideas, questions and decisions</span>
+      <span><b>64</b> tagged <span class="mono">by coach</span> &mdash; facilitation, pressure, structure</span>
+      <span><b>13</b> untagged &mdash; the log's own bookkeeping</span>
+    </div>
+    <p class="note">Every decision in the file &mdash; the survivor feature, the ambition level, the ratified
+    MoSCoW, the one scope change &mdash; is tagged <b>by user</b>. The coach's 64 are the scaffolding
+    around 48 load-bearing beams.</p>
+  </div>
+
+  <div class="toolbar">
+    <button class="tgl" type="button" id="focusBtn" aria-pressed="false">Isolate the student's entries</button>
+    <span class="note" style="margin:0">Dims coach and bookkeeping lines throughout the file.</span>
+  </div>
+</section>
+
+<!-- ==================== LEGEND ==================== -->
+<section class="sheet legend">
+  <h2>How this file is set</h2>
+  <div class="legend-grid">
+    <ul class="reel">
+      <li class="e e-u"><span class="tag">&#10022; student</span><span class="txt">Set in the serif, ruled in violet. These are the entries the log tags <span class="mono">by user</span>. They are the record.</span></li>
+      <li class="e e-c"><span class="tag">coach</span><span class="txt">Set smaller, in the margin hand. These are the entries tagged <span class="mono">by coach</span> &mdash; annotation on the record, not the record.</span></li>
+      <li class="e e-n"><span class="tag">log</span><span class="txt">Untagged bookkeeping: batch declarations, technique markers, the convergence header.</span></li>
+    </ul>
+    <div>
+      <p class="note"><b>On the Spanish.</b> The domain keeps its own vocabulary, by a rule the student set
+      in the first entry of the session: <em>controles</em>, <em>se&ntilde;ales</em>, <em>denuncia</em>,
+      <em>encargado de cumplimiento</em>, <em>delito</em>, <em>ficha del control</em>. By the end of the file
+      that rule stops being a style preference and becomes the domain model &mdash; the log notices this itself,
+      in Backcasting.</p>
+      <p class="note"><b>On the figures.</b> Every diagram below is drawn from entries in this one log.
+      Where a figure needs a number the log does not fix &mdash; individual se&ntilde;al weights, for instance
+      &mdash; it says so on the figure.</p>
+    </div>
+  </div>
+</section>
+
+<div class="batch-rule">Batch 1 &#183; chosen by the coach, stance chosen by the student</div>
+
+<!-- ==================== 01 JOB TO BE DONE ==================== -->
+<section class="sheet tech" id="t1">
+  <header class="tech-head">
+    <span class="tech-num">01</span>
+    <h2>Job to Be Done</h2>
+    <span class="tech-meta">25 entries &#183; 15 student / 9 coach / 1 log &#183; the longest run of the session</span>
+  </header>
+
+  <p class="lede">The technique asks what the user is hiring the product to do. The answer arrived in one
+  line and never changed: the <em>encargado de cumplimiento</em> is not hiring software to store documents.</p>
+
+  <ul class="reel">
+    <li class="e e-u"><span class="tag">&#10022; student</span><span class="txt">Core job: the <strong>encargado de cumplimiento</strong> makes the MPD <strong>effective</strong> &mdash; not merely documented.</span></li>
+    <li class="e e-u"><span class="tag">&#10022; student</span><span class="txt">The <strong>external auditor</strong> is the adversary across the table; asks for documents proving everything is in order.</span></li>
+    <li class="e e-c"><span class="tag">coach</span><span class="txt">Then the product's real output is a <strong>defensible evidence trail</strong>, not a dashboard: it can answer, months later, &ldquo;was this control operating, who was responsible, who checked?&rdquo;</span></li>
+    <li class="e e-u"><span class="tag">&#10022; student</span><span class="txt"><strong>Controles</strong> is the core domain object &mdash; many controles auditing different parts of the business, each bound to a specific <strong>delito</strong>. <em>Soborno y cohecho</em> has its own detection controles.</span></li>
+    <li class="e e-c"><span class="tag">coach</span><span class="txt">One control engine, then. Controles defined as data and configuration &mdash; adding a new <strong>delito</strong> becomes configuration, not new code. That is what makes a semester scope tractable.</span></li>
+    <li class="e e-u"><span class="tag">&#10022; student</span><span class="txt">Software analyzes a business activity &mdash; a <strong>compra</strong> &mdash; and emits a score from 0 to 1. Thresholds bucket it into <strong>probabilidad baja / media / alta</strong>.</span></li>
+    <li class="e e-c"><span class="tag">coach</span><span class="txt">Explainability <em>is</em> the evidence. The auditor asks &ldquo;why 0.87?&rdquo;, so every alert must show which se&ntilde;ales fired. Rules-based scoring is <strong>more</strong> defensible than opaque ML &mdash; which turns the proposal's named weakness, &ldquo;no real data for ML&rdquo;, into a design strength.</span></li>
+  </ul>
+
+  <h3 class="mini">Figure 1 &#183; <em>the three-layer engine</em></h3>
+  <p class="note">The student named controles; the coach noticed that <em>fraccionamiento</em> fires for both
+  <b>soborno y cohecho</b> and <b>lavado de activos</b>. Se&ntilde;ales are therefore reusable, and the object
+  model splits in three.</p>
+
+  <div class="engine">
+    <div class="layer">
+      <div class="layer-name">Eventos<small>what the business did</small></div>
+      <div class="layer-body">
+        <div class="chips">
+          <span class="chip hot">compra</span>
+          <span class="chip hot">pago / transferencia</span>
+          <span class="chip ext">an external source changed</span>
+        </div>
+        <p class="note" style="margin-top:.5rem">A different <b>delito</b> means a different event type &mdash; and the same machinery. The engine abstraction was confirmed here, not assumed.</p>
+      </div>
+    </div>
+    <div class="arrow-down">&#8595; &nbsp; detectors run over the event &nbsp; &#8595;</div>
+    <div class="layer">
+      <div class="layer-name">Se&ntilde;ales<small>reusable detectors</small></div>
+      <div class="layer-body">
+        <div class="chips">
+          <span class="chip">proveedor rec&eacute;n constituido</span>
+          <span class="chip">proveedor linked to a family member</span>
+          <span class="chip">a PEP is involved</span>
+          <span class="chip">causas judiciales pendientes</span>
+          <span class="chip hot">fraccionamiento</span>
+          <span class="chip">self-approval by the solicitante</span>
+          <span class="chip">price far off market</span>
+          <span class="chip">anomalous timing</span>
+          <span class="chip">shared bank account / address / phone</span>
+          <span class="chip">agregaci&oacute;n temporal</span>
+        </div>
+      </div>
+    </div>
+    <div class="arrow-down">&#8595; &nbsp; weighted composition, bound to a delito &nbsp; &#8595;</div>
+    <div class="layer">
+      <div class="layer-name">Controles<small>bound to a delito</small></div>
+      <div class="layer-body">
+        <div class="ctrl-box">
+          <b>Control &#183; soborno y cohecho</b>
+          <span class="mono" style="font-size:.72rem;color:var(--ink-2)">proveedor rec&eacute;n constituido &#183; PEP &#183; v&iacute;nculo familiar &#183; <span style="color:var(--notary);font-weight:700">fraccionamiento</span></span>
+        </div>
+        <div class="ctrl-box">
+          <b>Control &#183; lavado de activos</b>
+          <span class="mono" style="font-size:.72rem;color:var(--ink-2)">pagos y transferencias inusuales &#183; agregaci&oacute;n temporal &#183; <span style="color:var(--notary);font-weight:700">fraccionamiento</span></span>
+        </div>
+        <p class="note" style="margin:.5rem 0 0">The same se&ntilde;al appears in both controles. That single overlap is the whole argument for three layers instead of two.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="mini">Figure 2 &#183; <em>why 0.87</em></h3>
+  <p class="note">The auditor's question, drawn as the answer. The log fixes the contract &mdash; the scorer must
+  return <b>{score, breakdown[]}</b>, not a bare number &mdash; and fixes the score the auditor asks about.
+  The individual weights below are illustrative; the shape is not.</p>
+
+  <div class="score">
+    <div class="score-head"><span>Alerta &#183; compra #4412</span><span>Control: soborno y cohecho</span></div>
+    <div class="srow">
+      <span class="sname">Proveedor constituted five days before the compra<small>relacional</small></span>
+      <span class="smeter rel"><i style="width:34.5%"></i></span>
+      <span class="sval">+0.30</span>
+    </div>
+    <div class="srow">
+      <span class="sname">Apellido shared with the solicitante<small>relacional &#183; declaraci&oacute;n de intereses</small></span>
+      <span class="smeter rel"><i style="width:28.7%"></i></span>
+      <span class="sval">+0.25</span>
+    </div>
+    <div class="srow">
+      <span class="sname">Third compra just under the approval threshold in 30 days<small>intr&iacute;nseco &#183; fraccionamiento</small></span>
+      <span class="smeter intr"><i style="width:25.3%"></i></span>
+      <span class="sval">+0.22</span>
+    </div>
+    <div class="srow">
+      <span class="sname">Causa judicial vigente against the proveedor<small>relacional &#183; Poder Judicial</small></span>
+      <span class="smeter rel"><i style="width:11.5%"></i></span>
+      <span class="sval">+0.10</span>
+    </div>
+    <div class="stotal"><span>Score</span><span></span><span class="sval">0.87</span></div>
+    <div class="bands">
+      <span class="band">probabilidad baja</span>
+      <span class="band">probabilidad media</span>
+      <span class="band on">probabilidad alta</span>
+    </div>
+  </div>
+  <p class="note">Thresholds are pre-defined and configured, the student decided &mdash; not tuned ad hoc by the
+  <b>encargado de cumplimiento</b>. That decision has a consequence the coach caught two techniques later:
+  whoever can see the threshold can hide under it.</p>
+
+  <h3 class="mini">Figure 3 &#183; <em>the split the student's own list revealed</em></h3>
+  <p class="note">The student proposed four se&ntilde;ales. All four were about <b>who the counterparty is</b>.
+  Naming that pattern produced a second family nobody had listed &mdash; and, with it, the scope line
+  that survives all the way to the MoSCoW.</p>
+
+  <div class="two">
+    <div class="fam rel">
+      <h4>Relacional &mdash; who the counterparty is</h4>
+      <ul>
+        <li>Proveedor rec&eacute;n constituido (days old)</li>
+        <li>Proveedor linked to a family member of the person making the <b>compra</b></li>
+        <li>A PEP (Persona Expuesta Pol&iacute;ticamente) is involved</li>
+        <li>Proveedor has pending lawsuits or judicial record</li>
+      </ul>
+      <div class="foot">All four by the student. Needs external data: Poder Judicial, SII. Carries integration
+      risk. &mdash; The family-member se&ntilde;al forces a people-and-relationship registry into the data model:
+      a <b>declaraci&oacute;n de intereses</b> module, itself a real MPD component.</div>
+    </div>
+    <div class="fam intr">
+      <h4>Intr&iacute;nseco &mdash; the shape of the transaction</h4>
+      <ul>
+        <li><b>Fraccionamiento</b>: a compra split into pieces just under the approval threshold</li>
+        <li>The solicitante approves their own compra</li>
+        <li>Price far off market</li>
+        <li>Anomalous timing: weekend, cierre de ejercicio</li>
+        <li>Proveedor shares a bank account, address or phone with an employee</li>
+      </ul>
+      <div class="foot">All by the coach. Zero external integrations &mdash; semester-safe. This is the natural
+      scope split, and it is the reason the CSV-only decision costs almost nothing.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 02 QUESTION STORMING ==================== -->
+<section class="sheet tech" id="t2">
+  <header class="tech-head">
+    <span class="tech-num">02</span>
+    <h2>Question Storming</h2>
+    <span class="tech-meta">25 entries &#183; 12 student / 13 coach &#183; 13 questions asked, none answered on the spot</span>
+  </header>
+
+  <p class="lede">No answers allowed. Thirteen questions went on the wall &mdash; and two of them were quietly
+  answered by things said in other techniques, which is the whole reason the synthesis at the end of this
+  file exists.</p>
+
+  <div class="qwall">
+    <div class="q q-u"><span class="qid">Q&#183;01</span><span class="qt">What is the point of the MPD laws? What is the purpose underneath the compliance? <span class="answered">answered &#8594; synthesis 4</span></span></div>
+    <div class="q q-u"><span class="qid">Q&#183;02</span><span class="qt">What roles besides the <em>encargado de cumplimiento</em> get access? A CEO dashboard? HR?</span></div>
+    <div class="q q-u"><span class="qid">Q&#183;03</span><span class="qt">Which ERP are we supporting? <span class="answered">answered &#8594; synthesis 2</span></span></div>
+    <div class="q q-c"><span class="qid">Q&#183;04</span><span class="qt">If the law's point is prevention, does an alert that never becomes a <em>caso</em> still count as the system working &mdash; and how would you measure that?</span></div>
+    <div class="q q-c"><span class="qid">Q&#183;05</span><span class="qt">What happens when the person flagged <em>is</em> the CEO &mdash; or the <em>encargado de cumplimiento</em> herself? Who investigates the investigator?</span></div>
+    <div class="q q-c"><span class="qid">Q&#183;06</span><span class="qt">Can the person under suspicion see their own alert? Should they?</span></div>
+    <div class="q q-c"><span class="qid">Q&#183;07</span><span class="qt">What if the company has no ERP at all &mdash; many medianas chilenas run on Excel. Is CSV import the honest integration story for a prototype? <span class="answered">became a MUST</span></span></div>
+    <div class="q q-c"><span class="qid">Q&#183;08</span><span class="qt">Is <em>denunciante</em> anonymity technically guaranteeable, or only promised? What leaks it &mdash; metadata, timestamps, small-team inference?</span></div>
+    <div class="q q-c"><span class="qid">Q&#183;09</span><span class="qt">The system stores personal data on employees and terceros (PEP, judicial records) &mdash; what does Chilean data protection law demand of that?</span></div>
+    <div class="q q-c"><span class="qid">Q&#183;10</span><span class="qt">Who can delete or edit anything &mdash; and should the system permit deletion at all, if it is evidence? <span class="answered">became append-only</span></span></div>
+    <div class="q q-u"><span class="qid">Q&#183;11</span><span class="qt">Denunciante: is this fully anonymous?</span></div>
+    <div class="q q-u"><span class="qid">Q&#183;12</span><span class="qt">Denunciante: who reads this?</span></div>
+    <div class="q q-u"><span class="qid">Q&#183;13</span><span class="qt">Denunciante: how effective is this system &mdash; does anything actually happen?</span></div>
+  </div>
+
+  <h3 class="mini">The decisions the questions forced</h3>
+  <ul class="reel">
+    <li class="e e-u"><span class="tag">&#10022; student</span><span class="txt">Design axiom: <strong>a human always makes the decision &mdash; computers cannot be held accountable.</strong> Matches the proposal's own boundary: the system is not a mechanism of legal determination.</span></li>
+    <li class="e e-u"><span class="tag">&#10022; student</span><span class="txt">The encargado's actions on an alert: <strong>check, review, dismiss, escalate</strong>.</span></li>
+    <li class="e e-u"><span class="tag">&#10022; student</span><span class="txt">Evasion: <strong>pay in cash</strong> &mdash; leaves no trace in the ERP at all. Or keep the compra under the threshold so no control fires.</span></li>
+    <li class="e e-c"><span class="tag">coach</span><span class="txt">Thresholds create a <strong>detection shadow</strong>: anyone who knows the threshold hides under it. So threshold configuration must be restricted &mdash; who can see it becomes an access-control requirement.</span></li>
+    <li class="e e-c"><span class="tag">coach</span><span class="txt">Counter-se&ntilde;al to under-threshold evasion: <strong>agregaci&oacute;n temporal</strong> &mdash; same proveedor, many small compras, the sum crossing the limit over a rolling window.</span></li>
+  </ul>
+
+  <h3 class="mini">Figure 4 &#183; <em>two sensors, one blind spot</em></h3>
+  <p class="note">The student's own evasion &mdash; &ldquo;I could pay in cash&rdquo; &mdash; is what made the
+  <b>canal de denuncias</b> structural rather than a second module bolted on. <b>Controles</b> read data.
+  Cash, favours and a rigged bidding process leave no data. People see those.</p>
+
+  <div class="sensors">
+    <div class="trace-bar">
+      <div class="trace-yes">Conduct that leaves a data trace &mdash; compras, pagos, proveedores, approvals</div>
+      <div class="trace-no">Conduct that leaves none &mdash; efectivo, favores, licitaci&oacute;n arreglada</div>
+    </div>
+    <div class="sensor-pair">
+      <div class="sensor data">
+        <h4>Sensor de datos &mdash; los controles</h4>
+        <p>Sees everything in the ERP or the CSV. Scores it, explains it, logs it. Completely blind to the right-hand column.</p>
+      </div>
+      <div class="sensor people">
+        <h4>Sensor de personas &mdash; el canal de denuncias</h4>
+        <p>Covers exactly the blind spot. Not an unrelated module: the second half of one instrument.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="mini">Figure 5 &#183; <em>the denunciante's three fears are three requirements</em></h3>
+  <p class="note">The student asked three questions in the voice of the person filing a <b>denuncia</b>.
+  They map one to one onto what the system has to provide.</p>
+
+  <div class="f2r">
+    <div class="f2r-row">
+      <span class="fear">&ldquo;Is this fully anonymous?&rdquo;</span>
+      <span class="to">&#8594;</span>
+      <span class="req">Technical guarantees, not a promise: no account, no IP, no metadata leak.</span>
+    </div>
+    <div class="f2r-row">
+      <span class="fear">&ldquo;Who reads this?&rdquo;</span>
+      <span class="to">&#8594;</span>
+      <span class="req">A named recipient chain, plus <b>recusaci&oacute;n</b> routing for when the recipient is the accused.</span>
+    </div>
+    <div class="f2r-row">
+      <span class="fear">&ldquo;Does anything actually happen?&rdquo;</span>
+      <span class="to">&#8594;</span>
+      <span class="req">A feedback loop back to an anonymous person &mdash; a <b>c&oacute;digo de seguimiento</b>: ticket code plus passphrase, so the denunciante can return, see status and answer follow-ups without ever revealing identity.</span>
+    </div>
+  </div>
+  <p class="note"><b>Trust is a functional requirement, not UX polish.</b> If the denunciante does not trust
+  the channel, the people sensor emits zero data and the MPD is a <b>modelo de papel</b> no matter how good
+  the controles are. &mdash; This is the argument that put denuncias in scope. Convergence cut it anyway;
+  see the cut line.</p>
+</section>
+
+<!-- ==================== 03 ASSUMPTION REVERSAL ==================== -->
+<section class="sheet tech" id="t3">
+  <header class="tech-head">
+    <span class="tech-num">03</span>
+    <h2>Assumption Reversal</h2>
+    <span class="tech-meta">4 entries &#183; 1 student / 3 coach &#183; the shortest technique in the file</span>
+  </header>
+
+  <p class="lede">Three assumptions, turned over. Each reversal produced a feature that the un-reversed
+  assumption made invisible.</p>
+
+  <div class="flips">
+    <div class="flip">
+      <div class="assume"><span>Assumed</span>The company wants to find wrongdoing.</div>
+      <div class="becomes">
+        <h4>If it does not, the system must make <em>non-action</em> visible.</h4>
+        <p>Dismissal rates. Aging alerts. Controles never reviewed. Who ignored what. This is how you
+        measure <em>implementaci&oacute;n efectiva</em> against <em>modelo de papel</em> &mdash; the exact
+        distinction the whole product exists to serve.</p>
+      </div>
+    </div>
+    <div class="flip">
+      <div class="assume"><span>Assumed</span>More alerts means more safety.</div>
+      <div class="becomes">
+        <h4>Fewer is better.</h4>
+        <p>Alert fatigue trains the <em>encargado de cumplimiento</em> to dismiss everything.
+        Precision over recall &mdash; and the system should self-monitor, flagging controles that fire too often.</p>
+      </div>
+    </div>
+    <div class="flip">
+      <div class="assume"><span>Assumed</span>Detection is the point.</div>
+      <div class="becomes">
+        <h4>Prevention is.</h4>
+        <p>The highest-value feature becomes a <em>pre</em>-transaction check that warns the approver
+        <em>before</em> the compra is authorized. <em>Control preventivo</em> against <em>control detectivo</em>
+        is a real compliance distinction, and a very defensible one in the APT.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="fatigue">
+    <b>Noted in the log, honestly</b>
+    The student accepted the assumption list without picking one or adding to it, and answers were going
+    short &mdash; signs of fatigue. All three flips are the coach's. It is the only stretch of the session
+    where that is true, and the batch ends one technique later.
+  </div>
+</section>
+
+<!-- ==================== 04 ONE FEATURE ONLY ==================== -->
+<section class="sheet tech" id="t4">
+  <header class="tech-head">
+    <span class="tech-num">04</span>
+    <h2>One Feature Only</h2>
+    <span class="tech-meta">7 entries &#183; 3 student / 4 coach &#183; the batch's closing cut</span>
+  </header>
+
+  <p class="lede">Everything gets redacted except one thing. The student's answer came without hedging:
+  <em>el motor de controles</em>. Everything else, in the log's own words, was decoration around it.</p>
+
+  <p class="note">Below: what &ldquo;everything else&rdquo; meant, taken from the session's own inventory.
+  Reveal a bar to read what was covered.</p>
+
+  <div class="elim">
+    <button class="redact" type="button" aria-expanded="false"><span class="rlabel">canal de denuncias &#183; the people sensor</span><span class="rmark">reveal</span></button>
+    <button class="redact" type="button" aria-expanded="false"><span class="rlabel">dashboard for the CEO &#183; roles beyond the encargado</span><span class="rmark">reveal</span></button>
+    <button class="redact" type="button" aria-expanded="false"><span class="rlabel">real ERP integration</span><span class="rmark">reveal</span></button>
+    <button class="redact" type="button" aria-expanded="false"><span class="rlabel">document upload &#183; the politicas behind the controles</span><span class="rmark">reveal</span></button>
+    <button class="redact" type="button" aria-expanded="false"><span class="rlabel">declaraci&oacute;n de intereses &#183; the relationship registry</span><span class="rmark">reveal</span></button>
+    <button class="redact" type="button" aria-expanded="false"><span class="rlabel">enriquecedor de entidades &#183; SII, Poder Judicial, CMF, PEP lists</span><span class="rmark">reveal</span></button>
+    <button class="redact" type="button" aria-expanded="false"><span class="rlabel">monitoreo continuo &#183; re-evaluation when a source moves</span><span class="rmark">reveal</span></button>
+    <button class="redact" type="button" aria-expanded="false"><span class="rlabel">ML prioritization of alerts</span><span class="rmark">reveal</span></button>
+  </div>
+
+  <div class="survivor">
+    <span class="kicker">Survivor &#183; decided by the student</span>
+    <h4>El motor de controles</h4>
+    <p>Choosing the motor does not delete everything &mdash; it <em>absorbs</em> the minimum viable core of
+    several others. Scope discovered by deletion:</p>
+    <ul class="absorbed">
+      <li><span>control definition &mdash; which implies the <b>delito</b> mapping</span></li>
+      <li><span>the se&ntilde;al library</span></li>
+      <li><span>the event store</span></li>
+      <li><span>the alert, with its explanation</span></li>
+      <li><span>the human decision, with its reason</span></li>
+    </ul>
+  </div>
+
+  <h3 class="mini">The ambition, and what it paid for</h3>
+  <ul class="reel">
+    <li class="e e-c"><span class="tag">coach</span><span class="txt">The &ldquo;unbelievably good&rdquo; axis for the motor: an <strong>encargado de cumplimiento can author a new control without a developer</strong> &mdash; config-driven, no code. Otherwise it is just a script with a UI.</span></li>
+    <li class="e e-u"><span class="tag">&#10022; student</span><span class="txt">Ambition accepted. Pursue config-driven control authoring, no developer needed &mdash; <strong>&ldquo;we have time&rdquo;</strong>.</span></li>
+    <li class="e e-u"><span class="tag">&#10022; student</span><span class="txt">The auditor must get clear information about <strong>how the system works and what the process is</strong> &mdash; transparency of mechanism, not just of results.</span></li>
+    <li class="e e-c"><span class="tag">coach</span><span class="txt">Payoff: config-driven controles make <strong>self-documentation almost free</strong>. The same control definition renders twice &mdash; as executable logic <em>and</em> as an auditor-readable <strong>ficha del control</strong>: what it watches, which se&ntilde;ales, which weights, which thresholds, and the full history of alerts and human decisions. Choosing no-code authoring buys the auditor-transparency requirement for nearly nothing.</span></li>
+  </ul>
+</section>
+
+<div class="batch-rule">Batch 2 &#183; requested by the student</div>
+
+<!-- ==================== 05 MORPHOLOGICAL ANALYSIS ==================== -->
+<section class="sheet tech" id="t5">
+  <header class="tech-head">
+    <span class="tech-num">05</span>
+    <h2>Morphological Analysis</h2>
+    <span class="tech-meta">13 entries &#183; 3 student / 10 coach &#183; a grid whose empty cells are the finding</span>
+  </header>
+
+  <p class="lede">Break a control into its parameters, then walk the cells. Two things came out of the walk:
+  a control the student built from first principles that turns out to have a standard name, and a row of
+  cells nobody visited.</p>
+
+  <h3 class="mini">Figure 6 &#183; <em>the parameter grid</em></h3>
+  <div class="scroll-x">
+    <table class="morph">
+      <tbody>
+        <tr>
+          <th scope="row">Evento</th>
+          <td class="hit">compra<span class="cellmark">explored</span></td>
+          <td class="hit">pago / transferencia<span class="cellmark">explored</span></td>
+          <td class="hit">onboarding del proveedor<span class="cellmark">explored</span></td>
+          <td class="hit">an external source changed<span class="cellmark">new option, found here</span></td>
+        </tr>
+        <tr>
+          <th scope="row">Momento</th>
+          <td class="hit">detectivo, after the fact<span class="cellmark">explored</span></td>
+          <td class="hit">preventivo, before approval<span class="cellmark">explored</span></td>
+          <td class="hit">monitoreo continuo<span class="cellmark">explored, later cut</span></td>
+          <td class="void"></td>
+        </tr>
+        <tr>
+          <th scope="row">Sujeto</th>
+          <td class="hit">proveedor<span class="cellmark">explored</span></td>
+          <td class="hit">solicitante / aprobador<span class="cellmark">explored</span></td>
+          <td class="hit">the transaction itself<span class="cellmark">explored</span></td>
+          <td class="hit">the system's own users<span class="cellmark">meta-control</span></td>
+        </tr>
+        <tr>
+          <th scope="row">Fuente de la se&ntilde;al</th>
+          <td class="hit">intr&iacute;nseca &mdash; internal data only<span class="cellmark">explored</span></td>
+          <td class="hit">relacional &mdash; external sources<span class="cellmark">explored</span></td>
+          <td class="void"></td>
+          <td class="void"></td>
+        </tr>
+        <tr>
+          <th scope="row">Acci&oacute;n</th>
+          <td class="hit">emit an alerta<span class="cellmark">the default, every time</span></td>
+          <td class="hit">record evidence<span class="cellmark">explored</span></td>
+          <td class="gap">block the transaction<span class="cellmark">never opened</span></td>
+          <td class="gap">require a second approval<span class="cellmark">never opened</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="gridkey">
+    <span><i class="k-hit"></i>visited in the session</span>
+    <span><i class="k-gap"></i>named as unexplored &mdash; the coach's observation</span>
+    <span><i class="k-void"></i>no option on this axis</span>
+  </div>
+  <p class="note">The finding is the bottom row. Asked for a control in the <b>preventivo</b> cell, the student
+  described a screening that <b>emits an alerta</b> &mdash; defaulting the Acci&oacute;n axis back to the one
+  option already in hand. <b>Bloqueo</b> and <b>segunda aprobaci&oacute;n</b> are the cells a preventivo
+  control actually unlocks, and they stayed shut. They resurface once more, at the very bottom of the
+  MoSCoW.</p>
+
+  <div class="pick">
+    <b>The cell the student did fill</b>
+    <p>&ldquo;Screen the <em>proveedor</em> for pending judicial cases and other red flags before approval;
+    fire an alert with a risk amount.&rdquo; &mdash; That control <em>is</em>
+    <b>debida diligencia de terceros</b>: a standard, named MPD component, arrived at from first principles
+    without knowing its name. Strong validation that the engine model is describing the real domain.</p>
+  </div>
+
+  <h3 class="mini">The sources, and the shape they share</h3>
+  <ul class="reel">
+    <li class="e e-u"><span class="tag">&#10022; student</span><span class="txt">External public data sources to add: <strong>listas PEP, Diario Oficial, CMF</strong> &mdash; on top of SII and Poder Judicial.</span></li>
+    <li class="e e-c"><span class="tag">coach</span><span class="txt">More Chilean sources: ChileCompra / Mercado P&uacute;blico, Registro de Empresas y Sociedades, Direcci&oacute;n del Trabajo (multas), TDLC (libre competencia), Bolet&iacute;n Comercial, OFAC and UN sanction lists.</span></li>
+    <li class="e e-c"><span class="tag">coach</span><span class="txt">All of them share <strong>one shape</strong>: give an identifier, get facts about the entity. So it is not N integrations but one <strong>enriquecedor de entidades</strong> interface with N adapters &mdash; the same one-engine-many-configs pattern as the controles. Stub the adapters, implement one or two for real.</span></li>
+    <li class="e e-c"><span class="tag">coach</span><span class="txt">The <strong>RUT</strong> is the universal join key across every Chilean source &mdash; the entity-resolution key of the data model.</span></li>
+    <li class="e e-c"><span class="tag">coach</span><span class="txt">Evidence requires <strong>point-in-time enrichment</strong>: store what the source said when it was checked, with a timestamp. The auditor asks what you knew on 14 March, not what the source says today.</span></li>
+  </ul>
+
+  <h3 class="mini">Figure 7 &#183; <em>the loop closing on itself</em></h3>
+  <ul class="reel">
+    <li class="e e-u"><span class="tag">&#10022; student</span><span class="txt">Override flow: the alert is reviewed by the encargado and closed with a reason; <strong>everything gets logged</strong>.</span></li>
+    <li class="e e-c"><span class="tag">coach</span><span class="txt">That <strong>cierre con justificaci&oacute;n</strong> record is the highest-value evidence in the system. Alerts prove the model was watching; overrides prove what the organization <em>decided</em> despite a warning. That is where liability actually lives.</span></li>
+    <li class="e e-c"><span class="tag">coach</span><span class="txt">And overrides are themselves a data stream. One gerente overriding forty times is a se&ntilde;al. <strong>The engine can run a control over its own usage</strong> &mdash; the concrete mechanism for the &ldquo;make non-action visible&rdquo; flip from Assumption Reversal. Loop closed.</span></li>
+    <li class="e e-c"><span class="tag">coach</span><span class="txt">Independence, still open: can the encargado close an alert about the person who signs her paycheck? Implies an escalation path to <strong>directorio</strong> or a <strong>comit&eacute; de &eacute;tica</strong>.</span></li>
+  </ul>
+</section>
+
+<!-- ==================== 06 BACKCASTING ==================== -->
+<section class="sheet tech" id="t6">
+  <header class="tech-head">
+    <span class="tech-num">06</span>
+    <h2>Backcasting</h2>
+    <span class="tech-meta">14 entries &#183; 4 student / 10 coach &#183; read bottom to top</span>
+  </header>
+
+  <p class="lede">Start at demo day and walk backwards until you reach a Monday you can actually start on.
+  Every rung below is a precondition of the rung above it.</p>
+
+  <h3 class="mini">Figure 8 &#183; <em>the chain, walked backwards</em></h3>
+  <div class="ladder">
+    <span class="backlabel">walking backwards &#8594;</span>
+
+    <div class="rung t0 by-u">
+      <div class="rwhen">T&#8209;0 &#183; demo day</div>
+      <div class="rbody">
+        <h4>Upload a CSV of compras. The system detects a <em>caso</em>.</h4>
+        <p>The student's demo, stated in one sentence.</p>
+      </div>
+    </div>
+
+    <div class="rung">
+      <div class="rwhen">&#8593; but the beat that lands is not detection</div>
+      <div class="rbody">
+        <h4>Click the alert. See which <em>se&ntilde;ales</em> fired and what each contributed &mdash; plus the <em>ficha del control</em> behind it.</h4>
+        <p>Explanation, not discovery, is what an evaluation panel has never seen before.</p>
+      </div>
+    </div>
+
+    <div class="rung">
+      <div class="rwhen">&#8593; and the killer move</div>
+      <div class="rbody">
+        <h4>Author a new control live, in front of the panel, without touching code. Re-run the same CSV. A different <em>caso</em> appears.</h4>
+        <p>Proves the platform claim instead of asserting it.</p>
+      </div>
+    </div>
+
+    <div class="rung by-u">
+      <div class="rwhen">&#8593; before that</div>
+      <div class="rbody">
+        <h4>Rehearse the full <em>encargado</em> flow &mdash; how a user actually handles a <em>caso</em> &mdash; as part of the demo.</h4>
+      </div>
+    </div>
+
+    <div class="rung by-u">
+      <div class="rwhen">&#8593; before that</div>
+      <div class="rbody">
+        <h4>Verify the instance is deployed and running, with all seeded data working.</h4>
+      </div>
+    </div>
+
+    <div class="rung">
+      <div class="rwhen">&#8593; before that</div>
+      <div class="rbody">
+        <h4>Deploy early. Keep a local fallback. Record a video backup.</h4>
+        <p>Capstone demos die on infrastructure more often than on code.</p>
+      </div>
+    </div>
+
+    <div class="rung">
+      <div class="rwhen">&#8593; before that</div>
+      <div class="rbody">
+        <h4>The demo CSV carries a planted narrative.</h4>
+        <p>Proveedor constituted five days before the compra; apellido shared with the solicitante;
+        three compras just under the threshold.</p>
+      </div>
+    </div>
+
+    <div class="rung">
+      <div class="rwhen">&#8593; before that</div>
+      <div class="rbody">
+        <h4>A complete <em>vertical slice</em>, not a complete system.</h4>
+        <p>ingest &#8594; score &#8594; explain &#8594; review &#8594; close. One narrow path through every layer.
+        Build order: slice first, widen later.</p>
+      </div>
+    </div>
+
+    <div class="rung">
+      <div class="rwhen">&#8593; before that &#183; architectural, day one</div>
+      <div class="rbody">
+        <h4>The scorer returns <span class="mono">{score, breakdown[]}</span> &mdash; never a bare number.</h4>
+        <p>Explainability has to be built into scoring from the start. Retrofitting it later means
+        rewriting every <em>se&ntilde;al</em>.</p>
+      </div>
+    </div>
+
+    <div class="rung by-u">
+      <div class="rwhen">&#8593; week one</div>
+      <div class="rbody">
+        <h4>Work from the legal definitions of the <em>controles</em>. Align the software core before real coding.</h4>
+        <p>Timeboxed by the coach: derive two or three <em>delitos</em> properly, then build. The method is the
+        contribution; exhaustive catalogue coverage is not.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="mini">Figure 9 &#183; <em>the derivation chain &mdash; the project's intellectual contribution</em></h3>
+  <div class="scroll-x">
+    <div class="chain">
+      <div class="link"><b>01 &#183; the law</b><span>delito</span></div>
+      <div class="link"><b>02</b><span>conducta t&iacute;pica</span></div>
+      <div class="link"><b>03</b><span>rastro que deja</span></div>
+      <div class="link"><b>04</b><span>dato observable</span></div>
+      <div class="link"><b>05</b><span>se&ntilde;al</span></div>
+      <div class="link"><b>06 &#183; the software</b><span>control</span></div>
+    </div>
+  </div>
+  <p class="note">A repeatable method for deriving <b>controles</b> from law. This <em>is</em> the
+  &ldquo;levantamiento y an&aacute;lisis de requerimientos&rdquo; competency the programme asks for, and it
+  is the part a panel will find defensible.</p>
+
+  <h3 class="mini">Two reframes recorded here</h3>
+  <ul class="reel">
+    <li class="e e-c"><span class="tag">coach</span><span class="txt"><strong>Synthetic data is not a compromise &mdash; it is the experimental instrument.</strong> With planted casos you have ground truth, so you can actually measure precision and recall. Real data has no labels. This turns the proposal's named weakness into the evaluation methodology of the thesis.</span></li>
+    <li class="e e-c"><span class="tag">coach</span><span class="txt"><strong>Ubiquitous language:</strong> the domain model uses legal vocabulary directly &mdash; Control, Se&ntilde;al, Evento, Alerta, Caso, Delito, Proveedor, Denuncia &mdash; which is exactly what the student's own Spanish-domain-terms rule already mandates. The language rule and the domain model agree.</span></li>
+  </ul>
+</section>
+
+<!-- ==================== 07 FAILURE ANALYSIS ==================== -->
+<section class="sheet tech" id="t7">
+  <header class="tech-head">
+    <span class="tech-num">07</span>
+    <h2>Failure Analysis</h2>
+    <span class="tech-meta">11 entries &#183; 2 student / 9 coach &#183; a post-mortem written in advance</span>
+  </header>
+
+  <p class="lede">Assume the project failed. Say why. The student named the failure first &mdash;
+  &ldquo;bad execution&rdquo; &mdash; and the log records the pushback: too vague, name the mechanism.
+  These are the mechanisms.</p>
+
+  <div class="fails">
+    <div class="fail owned">
+      <span class="fnum">F&#183;1</span>
+      <div>
+        <h4>Death by breadth<span class="ftag">student's own pick as biggest risk</span></h4>
+        <p>Started denuncias, dashboard and ERP integration. Finished none. The most common capstone death.</p>
+      </div>
+    </div>
+    <div class="fail">
+      <span class="fnum">F&#183;2</span>
+      <div>
+        <h4>Eight weeks of legal research; coding starts week ten.</h4>
+        <p>The derivation chain is the contribution &mdash; and also the sinkhole, if it is not timeboxed.</p>
+      </div>
+    </div>
+    <div class="fail">
+      <span class="fnum">F&#183;3</span>
+      <div>
+        <h4>Blocked on someone else's API.</h4>
+        <p>External data &mdash; SII, Poder Judicial, CMF &mdash; needed credentials, scraping or legal access
+        that never materialized. Weeks lost to a dependency outside the project.</p>
+      </div>
+    </div>
+    <div class="fail">
+      <span class="fnum">F&#183;4</span>
+      <div>
+        <h4>No-code control authoring half-built.</h4>
+        <p>Neither works, nor was replaced by hardcoded <em>controles</em> in time. The ambition with no
+        fallback seam.</p>
+      </div>
+    </div>
+    <div class="fail sharp">
+      <span class="fnum">F&#183;5</span>
+      <div>
+        <h4>Circular evaluation<span class="ftag">sharpest risk in the file</span></h4>
+        <p>If the same person designs both the planted <em>casos</em> and the <em>se&ntilde;ales</em> that catch
+        them, the evaluation proves nothing. The panelist asks: &ldquo;you built the data to match your rules.&rdquo;
+        This is the direct counter-risk to the synthetic-data-as-methodology reframe, and it has to be
+        answered in the thesis rather than avoided.</p>
+      </div>
+    </div>
+    <div class="fail">
+      <span class="fnum">F&#183;6</span>
+      <div>
+        <h4>Thesis document left to the last three weeks while the code was &ldquo;almost done&rdquo;.</h4>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="mini">The antidote, and the deliverable hiding inside it</h3>
+  <ul class="reel">
+    <li class="e e-c"><span class="tag">coach</span><span class="txt">The antidote to breadth is a <strong>pre-committed cut line</strong>, written down before building starts, so that adding anything requires consciously amending it. One Feature Only already produced the candidate: <strong>el motor de controles</strong>.</span></li>
+    <li class="e e-c"><span class="tag">coach</span><span class="txt">And the discipline doubles as a deliverable. <strong>Delimitaci&oacute;n del alcance</strong> is a standard thesis section, and every idea cut becomes <strong>trabajo futuro</strong> &mdash; another standard section. The session's excess ideas have a legitimate academic home instead of being waste.</span></li>
+    <li class="e e-c"><span class="tag">coach</span><span class="txt">Arc closed: the original proposal said the project works <em>&ldquo;siempre que se defina adecuadamente el alcance&rdquo;</em>. This whole session has been the act of defining it.</span></li>
+  </ul>
+</section>
+
+<!-- ==================== CONVERGENCE ==================== -->
+<section class="sheet" id="convergence">
+  <header class="tech-head">
+    <span class="tech-num">&#8595;</span>
+    <h2>Convergence</h2>
+    <span class="tech-meta">13 entries &#183; 5 student / 6 coach / 2 log &#183; affinity clustering, then MoSCoW</span>
+  </header>
+
+  <p class="lede">One hundred and twenty-five entries, clustered into eleven groups, then cut.
+  Every ratification below is the student's.</p>
+
+  <h3 class="mini">Eleven clusters</h3>
+  <div class="clusters">
+    <div class="cl"><b>A</b><span>motor</span></div>
+    <div class="cl"><b>B</b><span>evidencia</span></div>
+    <div class="cl"><b>C</b><span>flujo del encargado</span></div>
+    <div class="cl"><b>D</b><span>autor&iacute;a sin c&oacute;digo</span></div>
+    <div class="cl"><b>E</b><span>ingesta</span></div>
+    <div class="cl"><b>F</b><span>enriquecimiento</span></div>
+    <div class="cl"><b>G</b><span>denuncias</span></div>
+    <div class="cl"><b>H</b><span>efectividad</span></div>
+    <div class="cl"><b>I</b><span>preventivos</span></div>
+    <div class="cl"><b>J</b><span>gobernanza</span></div>
+    <div class="cl"><b>K</b><span>metodolog&iacute;a</span></div>
+  </div>
+
+  <h3 class="mini">Figure 10 &#183; <em>the cut line</em></h3>
+  <div class="moscow">
+    <div class="mgroup m-must">
+      <header>Must <small>ratified by the student &#183; this is the semester</small></header>
+      <ul class="mitems">
+        <li><i>A</i><span>El motor de controles &mdash; the scorer returns a breakdown, never a bare number</span></li>
+        <li><i>C</i><span>Flujo del encargado &mdash; check, review, dismiss, escalate, close with a reason</span></li>
+        <li><i>B</i><span>Core evidencia: explicabilidad and the <b>ficha del control</b></span></li>
+        <li><i>E</i><span>Core ingesta: CSV only</span></li>
+        <li><i>K</i><span>Metodolog&iacute;a: the derivation chain, and a synthetic dataset with ground truth</span></li>
+        <li><i>D</i><span>Autor&iacute;a sin c&oacute;digo <em>promoted from Should, mid-convergence &mdash; see below</em></span></li>
+      </ul>
+    </div>
+
+    <div class="mgroup m-should">
+      <header>Should <small>only after the vertical slice runs end to end</small></header>
+      <ul class="mitems">
+        <li><i>D</i><span style="text-decoration:line-through;text-decoration-color:var(--ledger);text-decoration-thickness:2px">Autor&iacute;a sin c&oacute;digo, with a hardcoded fallback <em style="text-decoration:none">moved up to Must</em></span></li>
+        <li><i>B</i><span>The rest of evidencia: append-only log, point-in-time storage</span></li>
+        <li><i>H</i><span>Efectividad &mdash; dismissal rates, aging alerts, controles never reviewed</span></li>
+        <li><i>I</i><span>Partial: preventivo <em>timing</em></span></li>
+      </ul>
+    </div>
+
+    <div class="mgroup m-could">
+      <header>Could <small>if the slice is comfortable</small></header>
+      <ul class="mitems">
+        <li><i>F</i><span>The <b>enriquecedor de entidades</b> interface, plus one real adapter</span></li>
+        <li><i>J</i><span>Partial: a second role</span></li>
+      </ul>
+    </div>
+
+    <div class="cutline">L&iacute;nea de corte</div>
+    <p class="cut-note">Pre-committed, before building starts. Adding anything below the line back in
+    requires consciously amending the line.</p>
+
+    <div class="mgroup m-wont">
+      <header>Won't &mdash; this time <small>each of these is a section of the thesis, not a loss</small><span class="stamp-inline">Trabajo futuro</span></header>
+      <ul class="mitems">
+        <li><i>G</i><span>El canal de denuncias, entire &mdash; including the c&oacute;digo de seguimiento and the recusaci&oacute;n routing</span></li>
+        <li><i>&#8212;</i><span>Real ERP integration</span></li>
+        <li><i>F</i><span>Multi-source enrichment</span></li>
+        <li><i>&#8212;</i><span>Monitoreo continuo</span></li>
+        <li><i>I</i><span>Blocking enforcement &mdash; the empty cell from the morphological grid, still empty</span></li>
+        <li><i>&#8212;</i><span>ML prioritization</span></li>
+        <li><i>&#8212;</i><span>Multi-tenant</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="note" style="margin-top:1rem"><b>The enrichment cut was made painless on purpose.</b> The demo CSV
+  carries enrichment as columns &mdash; <span class="mono">fecha_constitucion_proveedor</span>,
+  <span class="mono">flag_PEP</span>, <span class="mono">causas_judiciales</span> &mdash; so the
+  <b>relacional</b> se&ntilde;ales still run, with zero integrations. Cluster F drops out of the critical path
+  without dropping out of the demo.</p>
+
+  <div class="promo">
+    <span class="pmark">&#8593;</span>
+    <div>
+      <h4>The one scope change &mdash; and it went the wrong way on purpose</h4>
+      <p><b>D, autor&iacute;a sin c&oacute;digo, promoted from Should to Must.</b> The student's reason:
+      <em>&ldquo;it's part of the flow.&rdquo;</em> If the only way to produce a control definition is the
+      student editing JSON, then the <em>encargado de cumplimiento</em> is not a user of the system, and the
+      platform claim dies with her.</p>
+      <p>The coach split D so the promotion stays survivable:</p>
+      <div class="split">
+        <div><b>D1 &#183; architecture, always Must</b>The engine consumes declarative control definitions.</div>
+        <div><b>D2 &#183; the authoring UI, now Must</b>If it stalls, seed definitions directly. The engine is
+        unaffected, the demo survives, one screen is lost instead of the architecture. Needs a pre-committed
+        cutoff date.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SYNTHESIS ==================== -->
+<section class="sheet synth" id="synthesis">
+  <header class="tech-head">
+    <span class="tech-num" style="color:#8F7BE0">&#10022;</span>
+    <h2>What the session was actually doing</h2>
+    <span class="tech-meta" style="color:#9A92C4">Five connections between entries that were never in the same room</span>
+  </header>
+
+  <p>None of these five were said out loud during a technique. Each one is two or three entries, made
+  hours and techniques apart, that turn out to be the same thought. This is the part of the file that could
+  not have been written by anyone who was not in the room for all of it.</p>
+
+  <div class="syn">
+
+    <div class="syn-item">
+      <div class="syn-n">Synthesis 1 &#183; the axiom that resolved the ML tension</div>
+      <div class="bridge">
+        <div class="bnode"><b>Job to Be Done &#183; student</b>&ldquo;ML models detect abnormal behaviour as the alert source.&rdquo;</div>
+        <div class="bjoin">&#43;</div>
+        <div class="bnode"><b>Question Storming &#183; student</b>&ldquo;A human always makes the decision &mdash; computers cannot be held accountable.&rdquo;</div>
+      </div>
+      <p class="syn-out">The axiom <b>silently demotes ML to prioritization</b> &mdash; which is exactly the role
+      the original APT proposal assigned it. The student fixed their own document's contradiction two
+      techniques apart, without noticing they had done it.</p>
+      <p class="syn-tail">Both halves are the student's. The coach only noticed they had met.</p>
+    </div>
+
+    <div class="syn-item">
+      <div class="syn-n">Synthesis 2 &#183; an answer arriving before its question was reopened</div>
+      <div class="bridge">
+        <div class="bnode"><b>Question Storming &#183; student</b>&ldquo;Which ERP are we supporting?&rdquo;</div>
+        <div class="bjoin">&#43;</div>
+        <div class="bnode"><b>Question Storming &#183; student</b>&ldquo;I could pay in cash.&rdquo;</div>
+      </div>
+      <p class="syn-out">Cash proves the ERP is a <b>partial sensor whatever you pick</b>. So betting the
+      semester on ERP integration buys less than it looks like it buys. <b>CSV is the correct call, not a
+      compromise</b> &mdash; and the Must line records it as such.</p>
+      <p class="syn-tail">The student answered their own question with an evasion they invented to break the system.</p>
+    </div>
+
+    <div class="syn-item">
+      <div class="syn-n">Synthesis 3 &#183; three requirements, one artifact</div>
+      <div class="bridge b3">
+        <div class="bnode"><b>One Feature Only</b>The <em>ficha del control</em>, for the auditor.</div>
+        <div class="bjoin">&#43;</div>
+        <div class="bnode"><b>Convergence &#183; D1</b>Declarative control definitions, for the engine.</div>
+        <div class="bjoin">&#43;</div>
+        <div class="bnode"><b>Backcasting</b>Authoring a control live, for the panel.</div>
+      </div>
+      <p class="syn-out">Three audiences, three requirements &mdash; and <b>one artifact</b>. Build the
+      declarative control definition once; render it three ways. The auditor-transparency requirement, the
+      architecture and the demo's best moment are the same file read by different readers.</p>
+    </div>
+
+    <div class="syn-item">
+      <div class="syn-n">Synthesis 4 &#183; the opening question, answered at the end</div>
+      <div class="bridge">
+        <div class="bnode"><b>Question Storming &#183; student</b>&ldquo;What is the point of the MPD laws?&rdquo;</div>
+        <div class="bjoin">&#43;</div>
+        <div class="bnode"><b>Morphological &#183; student</b>&ldquo;The alert is closed with a reason; everything gets logged.&rdquo;</div>
+      </div>
+      <p class="syn-out">If the point of the laws is <b>changing decisions</b> rather than archiving them, then
+      the <b>cierre con justificaci&oacute;n</b> log is the only place in the entire system where the model
+      can be observed working. The student asked the question in technique two and built its answer in
+      technique five.</p>
+    </div>
+
+    <div class="syn-item wild">
+      <div class="syn-n">Synthesis 5 &#183; the wildcard &#183; the first idea, cut</div>
+      <div class="bridge">
+        <div class="bnode"><b>Job to Be Done &#183; entry one</b>&ldquo;She uploads documents into the platform.&rdquo;</div>
+        <div class="bjoin">&#8594;</div>
+        <div class="bnode"><b>Convergence</b>Cut. Below the l&iacute;nea de corte.</div>
+      </div>
+      <p class="syn-out">The student's very first idea of the session is the piece that would
+      <b>make the derivation chain visible</b> &mdash; the <em>pol&iacute;tica</em> document that defines the
+      control, sitting beside the control it produced. Cut correctly, and still the most natural next
+      increment: it belongs at the top of <b>trabajo futuro</b>, item number one.</p>
+      <p class="syn-tail">Everything that opened the session survived except this. It is the only cut in the
+      file that has a return date implied.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ==================== REGISTER ==================== -->
+<section class="sheet" id="register">
+  <header class="tech-head">
+    <span class="tech-num">&#931;</span>
+    <h2>The register</h2>
+    <span class="tech-meta">125 entries, by technique and by hand</span>
+  </header>
+
+  <p class="lede">Where the session's weight actually fell. The first two techniques hold 40&#160;% of the whole
+  file between them, and they are also the only two where the student out-writes the coach.</p>
+
+  <div class="reg">
+    <div class="regrow">
+      <span class="rname">Setup &amp; batching</span>
+      <span class="rbar"><i class="bu" style="width:12%"></i><i class="bn" style="width:12%"></i></span>
+      <span class="rcount">6</span>
+    </div>
+    <div class="regrow">
+      <span class="rname">01 Job to Be Done</span>
+      <span class="rbar"><i class="bu" style="width:60%"></i><i class="bc" style="width:36%"></i><i class="bn" style="width:4%"></i></span>
+      <span class="rcount">25</span>
+    </div>
+    <div class="regrow">
+      <span class="rname">02 Question Storming</span>
+      <span class="rbar"><i class="bu" style="width:48%"></i><i class="bc" style="width:52%"></i></span>
+      <span class="rcount">25</span>
+    </div>
+    <div class="regrow">
+      <span class="rname">03 Assumption Reversal</span>
+      <span class="rbar"><i class="bu" style="width:4%"></i><i class="bc" style="width:12%"></i></span>
+      <span class="rcount">4</span>
+    </div>
+    <div class="regrow">
+      <span class="rname">04 One Feature Only</span>
+      <span class="rbar"><i class="bu" style="width:12%"></i><i class="bc" style="width:16%"></i></span>
+      <span class="rcount">7</span>
+    </div>
+    <div class="regrow">
+      <span class="rname">05 Morphological Analysis</span>
+      <span class="rbar"><i class="bu" style="width:12%"></i><i class="bc" style="width:40%"></i></span>
+      <span class="rcount">13</span>
+    </div>
+    <div class="regrow">
+      <span class="rname">06 Backcasting</span>
+      <span class="rbar"><i class="bu" style="width:16%"></i><i class="bc" style="width:40%"></i></span>
+      <span class="rcount">14</span>
+    </div>
+    <div class="regrow">
+      <span class="rname">07 Failure Analysis</span>
+      <span class="rbar"><i class="bu" style="width:8%"></i><i class="bc" style="width:36%"></i></span>
+      <span class="rcount">11</span>
+    </div>
+    <div class="regrow">
+      <span class="rname">Technique markers</span>
+      <span class="rbar"><i class="bn" style="width:28%"></i></span>
+      <span class="rcount">7</span>
+    </div>
+    <div class="regrow">
+      <span class="rname">Convergence &amp; synthesis</span>
+      <span class="rbar"><i class="bu" style="width:20%"></i><i class="bc" style="width:24%"></i><i class="bn" style="width:8%"></i></span>
+      <span class="rcount">13</span>
+    </div>
+  </div>
+  <div class="attrib-key" style="margin-top:.8rem">
+    <span><i class="k-hit" style="display:inline-block;width:.8rem;height:.8rem;background:var(--notary);vertical-align:-.05rem;margin-right:.35rem"></i>student</span>
+    <span><i style="display:inline-block;width:.8rem;height:.8rem;background:repeating-linear-gradient(45deg,var(--notary-line) 0 3px,var(--notary-soft) 3px 6px);border:1px solid var(--rule-2);vertical-align:-.05rem;margin-right:.35rem"></i>coach</span>
+    <span><i style="display:inline-block;width:.8rem;height:.8rem;background:var(--sheet-3);border:1px solid var(--rule-2);vertical-align:-.05rem;margin-right:.35rem"></i>log bookkeeping</span>
+    <span>bars scaled to the longest technique, 25 entries</span>
+  </div>
+
+  <p class="closing" style="margin-top:1.8rem">The proposal that opened this session said the project works
+  <em>&ldquo;siempre que se defina adecuadamente el alcance&rdquo;</em>. One hundred and twenty-five entries
+  later, the <em>alcance</em> is one sentence long: <strong>el motor de controles</strong>, and one narrow path
+  straight through it &mdash; ingest, score, explain, review, close.</p>
+
+  <div class="colophon">
+    <span>Expediente MPD&#8239;/&#8239;2026-08-29</span>
+    <span>Source: <span class="mono">.memlog.md</span>, 125 entries</span>
+    <span>Session status: complete</span>
+    <span>Duoc UC &#183; Ingenier&iacute;a en Inform&aacute;tica &#183; APT</span>
+  </div>
+</section>
+
+</div><!-- /wrap -->
+
+<script>
+(function () {
+  "use strict";
+
+  // Isolate the student's entries.
+  var btn = document.getElementById("focusBtn");
+  if (btn) {
+    btn.addEventListener("click", function () {
+      var on = btn.getAttribute("aria-pressed") === "true";
+      btn.setAttribute("aria-pressed", on ? "false" : "true");
+      document.body.classList.toggle("focus-student", !on);
+      btn.textContent = on ? "Isolate the student's entries" : "Show the whole file again";
+    });
+  }
+
+  // Redaction bars: click to uncover what One Feature Only covered.
+  var bars = document.querySelectorAll(".redact");
+  for (var i = 0; i < bars.length; i++) {
+    bars[i].addEventListener("click", function () {
+      var open = this.getAttribute("aria-expanded") === "true";
+      this.setAttribute("aria-expanded", open ? "false" : "true");
+      this.querySelector(".rmark").textContent = open ? "reveal" : "cut";
+    });
+  }
+})();
+</script>
+</body>
+</html>
