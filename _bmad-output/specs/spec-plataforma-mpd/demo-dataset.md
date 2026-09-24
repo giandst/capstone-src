@@ -9,6 +9,7 @@ Three plants, chosen so that the señales of the slice each have something to fi
 1. A **proveedor constituido 5 días antes de la compra**.
 2. A proveedor whose **apellido is shared with the solicitante**.
 3. **Tres compras justo bajo el umbral** — fraccionamiento.
+4. **Una compra adjudicada con un solo oferente** — `n_oferentes = 1` on an award large enough that competing quotes would be expected.
 
 The file is then bulked with clean, boring compras, so the planted casos are not the only rows and precision is measurable rather than trivially perfect.
 
@@ -19,6 +20,7 @@ This is the decision that makes cutting external integrations costless. Alongsid
 - `fecha_constitucion_proveedor`
 - `flag_PEP`
 - `causas_judiciales`
+- `n_oferentes` — how many bidders the award had. Unlike the three above this is **not** enrichment: it is procurement-process data the organisation already holds, added 2026-09-19 after the derivation showed no señal read the typical element of CP art. 287 bis (`derivacion-delitos.md` §1.2).
 
 Consequences, which are the reason the cut is costless rather than merely tolerable:
 

@@ -13,12 +13,15 @@ Phase 2 implements **two or three señales only** — enough to make one control
 
 | Señal | Reads | Delito(s) | Tier |
 |---|---|---|---|
+| `adjudicación sin competencia` | `n_oferentes` on the compra — the award had a single bidder | corrupción entre particulares | **slice** |
 | `fraccionamiento` | several compras to the same proveedor each just under the approval threshold | corrupción entre particulares · lavado de activos | **slice** |
 | solicitante approves their own compra | approver identity vs. solicitante identity | corrupción entre particulares | widen |
 | precio muy fuera de mercado | compra amount vs. a reference | corrupción entre particulares | widen |
 | timing anómalo | date/time of the compra (weekend, cierre de ejercicio) | corrupción entre particulares · lavado de activos | widen |
 | proveedor shares bank account, address or phone with an employee | counterparty contact fields vs. employee records | corrupción entre particulares | widen |
 | agregación temporal | rolling-window sum over the same proveedor crossing the limit | corrupción entre particulares | widen |
+
+`adjudicación sin competencia` is the only señal in this catalog that reads the **typical element** of CP art. 287 bis — favouring the contracting of *one oferente over another*. Every other señal bound to that delito reads motive or enabling circumstance, not the conduct the statute describes. Derived 2026-09-19; see `derivacion-delitos.md` §1.2.
 
 `fraccionamiento` is the load-bearing one: it fires for **both** delitos in scope, which is the concrete evidence that señales are a layer rather than per-control code.
 
