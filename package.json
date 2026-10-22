@@ -42,7 +42,9 @@
   },
   "dependencies": {
     "@capstone-src/env": "workspace:*",
+    "@types/papaparse": "^5.5.2",
     "dotenv": "catalog:",
+    "papaparse": "^5.7.0",
     "zod": "catalog:"
   },
   "devDependencies": {
